@@ -4,24 +4,12 @@ import TableDynamic from '../components/Table'
 function LprPage() {
   const [data, setData] = useState([])
 
-  useEffect(() => {
-    axios
-      .get('https://jsonplaceholder.typicode.com/users/1')
-      .then((res) => setData(res.data))
-  })
-
-  //   console.log(data)
   return (
     <div className=" px-3 py-2  m-auto">
-      {/* <h1>About</h1>
-      <hr />
-      <h3>My Name is {data.name}</h3>
-      <ul>
-        <li>email :{data.email}</li>
-        <li>phone :{data.phone}</li>
-        <li>website :{data.website}</li>
-      </ul> */}
-      <TableDynamic />
+      <p>
+        hello LPR ต้องเพื่มจากเดิมคือต้อง post ข้อมูลลงไปได้
+        แยกอีกตารางจริงๆแล้ว
+      </p>
     </div>
   )
 }
