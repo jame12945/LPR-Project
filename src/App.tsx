@@ -1,12 +1,17 @@
 import React from 'react'
-import './App.css'
-import './index.css'
+import { DatePicker } from 'antd'
+import { Routes, Route, Link } from 'react-router-dom'
+import Navbar from './components/Nav'
+import ListviewPage from './pages/ListviewPage'
 
 function App() {
   return (
-    <h1 className="text-3xl font-bold underline text-red-600">
-      Simple React Typescript Tailwind Sample hello
-    </h1>
+    <>
+      <Navbar />
+      <Routes>
+        <Route path="/listview" element={<ListviewPage />} />
+      </Routes>
+    </>
   )
 }
 
