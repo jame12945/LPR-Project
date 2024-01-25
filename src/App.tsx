@@ -4,6 +4,7 @@ import { Routes, Route, Link } from 'react-router-dom'
 import Navbar from './components/Nav'
 import ListviewPage from './pages/ListviewPage'
 import LprPage from './pages/LprPage'
+
 function App() {
   return (
     <>

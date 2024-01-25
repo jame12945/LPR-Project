@@ -15,7 +15,7 @@ function Navbar() {
         >
           {displayText}
         </Link>
-        <ul className="flex align-middle list-none h-auto mt-6">
+        <ul className="flex align-middle list-none h-auto mt-7">
           <li className="flex pr-10">
             <Link
               to="/listview"

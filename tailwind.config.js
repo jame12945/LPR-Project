@@ -20,6 +20,7 @@ const config = {
       blue: '#60a5fa',
       'bubble-gum': '#ff77e9',
       bermuda: '#78dcca',
+      green: '#22c55e',
     },
   },
   plugins: [],

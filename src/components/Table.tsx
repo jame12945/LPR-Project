@@ -3,6 +3,8 @@ import { Table, Menu, Dropdown, Button } from 'antd'
 import { GiTruck } from 'react-icons/gi'
 import axios from 'axios'
 import dayjs from 'dayjs'
+import { toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 function TableDynamic() {
   const [columns, setColumn] = useState([])
@@ -24,14 +26,23 @@ function TableDynamic() {
               dataIndex: 'truckType',
               render: (text) => (
                 <div className="flex">
-                  <GiTruck className=" text-2xl mr-4" /> {text}
+                  <GiTruck className=" text-4xl mr-4" />
+                  <div className="mt-2">{text}</div>
                 </div>
               ),
             },
             {
               title: 'Appointment Date',
               dataIndex: 'bookingDate',
-              render: (text) => dayjs(text).format('YYYY-MM-DD'),
+              render: (text, record) => (
+                <div>
+                  <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
+                  <div className=" text-green">
+                    ( {dayjs(record.bookingStart, 'HH:mm:ss').format('HH:mm')} -{' '}
+                    {dayjs(record.bookingStop, 'HH:mm:ss').format('HH:mm')} )
+                  </div>
+                </div>
+              ),
             },
             {
               title: 'Car Registration',
@@ -74,9 +85,6 @@ function TableDynamic() {
     fetchData()
   }, [])
   const handleMenuClick = (e, bookingId) => {
-    // Set selectedId when CheckIn is clicked
-    // data ไหลยาว
-    //พนทำหน้า
     if (e.key === 'CheckIn') {
       setSelectedId(bookingId)
     }
@@ -85,18 +93,25 @@ function TableDynamic() {
     const checkIn = async () => {
       if (selectedId) {
         try {
-          await axios.post('http://localhost:3000/booking-fe/check-in', {
-            idSelected: selectedId,
-          })
-          console.log(`Chechin Successfully for booking of ${selectedId}`)
+          const response = await axios.post(
+            'http://localhost:3000/booking-fe/check-in',
+            { idSelected: selectedId }
+          )
+
+          console.log(`Checking in successfully for booking of ${selectedId}`)
+          console.log('Response:', response.data)
+          console.log('Data From Backend:', response.data.data.stampStatusData)
+
+          toast.success('ระบบทำการ CheckIn เรียบร้อยแล้ว')
         } catch (error) {
-          console.error('CheckIn Error ', error)
+          console.error('CheckIn Error: ', error)
+          toast.error('Check-in failed!')
         }
       }
     }
+
     checkIn()
   }, [selectedId])
-
   return (
     <>
       <Table columns={columns} dataSource={dataSource} />
