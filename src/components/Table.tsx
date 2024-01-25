@@ -3,7 +3,7 @@ import { Table, Menu, Dropdown, Button } from 'antd'
 import { GiTruck } from 'react-icons/gi'
 import axios from 'axios'
 import dayjs from 'dayjs'
-import { toast } from 'react-toastify'
+import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 function TableDynamic() {
@@ -84,37 +84,43 @@ function TableDynamic() {
 
     fetchData()
   }, [])
-  const handleMenuClick = (e, bookingId) => {
+
+  const handleMenuClick = async (e, bookingId) => {
     if (e.key === 'CheckIn') {
       setSelectedId(bookingId)
-    }
-  }
-  useEffect(() => {
-    const checkIn = async () => {
-      if (selectedId) {
-        try {
-          const response = await axios.post(
-            'http://localhost:3000/booking-fe/check-in',
-            { idSelected: selectedId }
-          )
 
-          console.log(`Checking in successfully for booking of ${selectedId}`)
-          console.log('Response:', response.data)
-          console.log('Data From Backend:', response.data.data.stampStatusData)
+      try {
+        const response = await axios.post(
+          'http://localhost:3000/booking-fe/check-in',
+          { idSelected: bookingId }
+        )
 
-          toast.success('ระบบทำการ CheckIn เรียบร้อยแล้ว')
-        } catch (error) {
-          console.error('CheckIn Error: ', error)
-          toast.error('Check-in failed!')
-        }
+        console.log(`Checking in successfully for booking of ${bookingId}`)
+        console.log('Response:', response.data)
+        console.log('Data From Backend:', response.data.data.stampStatusData)
+
+        toast.success('ระบบทำการ CheckIn เรียบร้อยแล้ว')
+      } catch (error) {
+        console.error('CheckIn Error: ', error)
+        toast.error('Check-in failed!')
+      }
+    } else {
+      setSelectedId(bookingId)
+
+      try {
+        const response = await axios.get('http://localhost:3000/opengate', {})
+        console.log('Response:', response.data)
+        toast.success('ระบบกำลังเปิดไม้กั้น')
+      } catch (error) {
+        toast.error('OpenGate Error')
       }
     }
+  }
 
-    checkIn()
-  }, [selectedId])
   return (
     <>
       <Table columns={columns} dataSource={dataSource} />
+      <ToastContainer />
     </>
   )
 }
