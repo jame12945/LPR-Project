@@ -21,6 +21,7 @@ const config = {
       'bubble-gum': '#ff77e9',
       bermuda: '#78dcca',
       green: '#22c55e',
+      sky: '#bae6fd',
     },
   },
   plugins: [],

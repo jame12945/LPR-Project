@@ -5,6 +5,7 @@ import axios from 'axios'
 import dayjs from 'dayjs'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { IoChevronDownOutline } from 'react-icons/io5'
 
 function TableDynamic() {
   const [columns, setColumn] = useState([])
@@ -55,6 +56,13 @@ function TableDynamic() {
             {
               title: 'BookingId',
               dataIndex: 'id',
+              render: (text) => (
+                <>
+                  <div className="bg-sky rounded-md px-2 text-center">
+                    {text}
+                  </div>
+                </>
+              ),
             },
             {
               title: 'Manage',
@@ -68,7 +76,12 @@ function TableDynamic() {
                     </Menu>
                   }
                 >
-                  <Button>Action</Button>
+                  <Button className="bg-sky flex">
+                    <span>Action</span>
+                    <div className="flex items-center justify-center ml-2 mt-1.5 ">
+                      <IoChevronDownOutline />
+                    </div>
+                  </Button>
                 </Dropdown>
               ),
             },
