@@ -6,11 +6,18 @@ import dayjs from 'dayjs'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { IoChevronDownOutline } from 'react-icons/io5'
+import { Modal } from 'antd'
+//ทำตารางย่อยเมื่อกด BookingId
+//ทำส่วนนี้ใช้ text ธรรมดา กับ dayjs  รถมาถึงภายในช่วงเวลาที่นัดหมาย    Date:27-12-2023   Time:11:30
+//search
+//เปลี่ยนสี table ให้เป็น sky
 
 function TableDynamic() {
   const [columns, setColumn] = useState([])
   const [dataSource, setDataSource] = useState([])
   const [selectedId, setSelectedId] = useState('')
+  const [modalVisible, setModalVisible] = useState(false)
+  const [selectedBooking, setSelectedBooking] = useState(null)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -56,9 +63,13 @@ function TableDynamic() {
             {
               title: 'BookingId',
               dataIndex: 'id',
-              render: (text) => (
+              render: (text, record) => (
                 <>
-                  <div className="bg-sky rounded-md px-2 text-center">
+                  <div
+                    className="bg-sky rounded-md px-2 py-1.5 text-center"
+                    onClick={() => handleBooking(record)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     {text}
                   </div>
                 </>
@@ -130,10 +141,46 @@ function TableDynamic() {
     }
   }
 
+  const handleBooking = (record) => {
+    setSelectedBooking(record)
+    setModalVisible(true)
+  }
+  const handleModalCancel = () => {
+    setModalVisible(false)
+  }
+
   return (
     <>
       <Table columns={columns} dataSource={dataSource} />
       <ToastContainer />
+      <Modal
+        title={`Booking Details : ${selectedBooking?.id}`}
+        visible={modalVisible}
+        onCancel={handleModalCancel}
+        footer={null}
+      >
+        <div className="grid grid-flow-col justify-stretch">
+          <div>
+            <p>Booking Id: {selectedBooking?.id}</p>
+            <p>Booking Date: {selectedBooking?.bookingDate}</p>
+            <p>Booking Start: {selectedBooking?.bookingStart}</p>
+            <p>Booking Stop: {selectedBooking?.bookingStop}</p>
+            <p>TruckLicensePlate: {selectedBooking?.truckLicensePlate}</p>
+            <p>Warehouse Code: {selectedBooking?.warehouseCode}</p>
+            <p>Truck Type: {selectedBooking?.truckType}</p>
+          </div>
+
+          <div>
+            <p> Company Code: {selectedBooking?.companyCode}</p>
+            <p> Sup Code: {selectedBooking?.supCode}</p>
+            <p> Sup Name: {selectedBooking?.supName}</p>
+            <p> operationType: {selectedBooking?.operationType}</p>
+            <p> Driver Name: {selectedBooking?.driverName}</p>
+            <p>Lane: {selectedBooking?.len}</p>
+            <p> Tel: {selectedBooking?.telNo}</p>
+          </div>
+        </div>
+      </Modal>
     </>
   )
 }
