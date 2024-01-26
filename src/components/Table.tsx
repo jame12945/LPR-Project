@@ -6,8 +6,10 @@ import dayjs from 'dayjs'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { IoChevronDownOutline } from 'react-icons/io5'
-import { Modal } from 'antd'
-//ทำตารางย่อยเมื่อกด BookingId
+import { Modal, Input, Space } from 'antd'
+import type { SearchProps } from 'antd/es/input/Search'
+
+//ทำตารางย่อยเมื่อกด BookingId  okในเบื้องต้น
 //ทำส่วนนี้ใช้ text ธรรมดา กับ dayjs  รถมาถึงภายในช่วงเวลาที่นัดหมาย    Date:27-12-2023   Time:11:30
 //search
 //เปลี่ยนสี table ให้เป็น sky
@@ -18,6 +20,9 @@ function TableDynamic() {
   const [selectedId, setSelectedId] = useState('')
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedBooking, setSelectedBooking] = useState(null)
+  const [responseData, setResponseData] = useState(null)
+  const { Search } = Input
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -26,7 +31,7 @@ function TableDynamic() {
           {}
         )
         const data = response.data.data.filterDateBooking || []
-
+        setResponseData(data)
         if (data.length > 0) {
           const cols = [
             {
@@ -66,7 +71,7 @@ function TableDynamic() {
               render: (text, record) => (
                 <>
                   <div
-                    className="bg-sky rounded-md px-2 py-1.5 text-center"
+                    className="bg-sky rounded-md px-2 py-1.5 text-center hover:bg-rain hover:text-white"
                     onClick={() => handleBooking(record)}
                     style={{ cursor: 'pointer' }}
                   >
@@ -148,9 +153,37 @@ function TableDynamic() {
   const handleModalCancel = () => {
     setModalVisible(false)
   }
+  const onSearch: SearchProps['onSearch'] = (value, _e, info) => {
+    console.log(info?.source, value)
+    const filterData = responseData.filter((item) =>
+      item.truckLicensePlate.includes(value)
+    )
+    console.log(
+      'filterData................................................................'
+    )
+    console.log(filterData)
+    setDataSource(filterData)
+  }
 
   return (
     <>
+      <div className="flex justify-between pb-4 text-white pl-8 pt-2 placeholder text-xl ">
+        <div className="flex">
+          <p className=" text-xl">จำนวนการจองทั้งหมดภายในวันนี้</p>
+          <div className="pl-14"> Date:{dayjs().format('YYYY-MM-DD')}</div>
+          <div className="pl-4">
+            {' '}
+            Time:{dayjs().add(0, 'minute').format('HH:mm')}
+          </div>
+        </div>
+
+        <Search
+          placeholder="Input Car Registration"
+          enterButton
+          onSearch={onSearch}
+          className="w-80 flex items-end"
+        ></Search>
+      </div>
       <Table columns={columns} dataSource={dataSource} />
       <ToastContainer />
       <Modal
@@ -162,8 +195,11 @@ function TableDynamic() {
         <div className="grid grid-flow-col justify-stretch">
           <div>
             <p>Booking Id: {selectedBooking?.id}</p>
-            <p>Booking Date: {selectedBooking?.bookingDate}</p>
-            <p>Booking Start: {selectedBooking?.bookingStart}</p>
+            <p>
+              Booking Date:{' '}
+              {dayjs(selectedBooking?.bookingDate).format('YYYY-MM-DD')}
+            </p>
+            <p>Booking Start: {selectedBooking?.bookingStart}</p>{' '}
             <p>Booking Stop: {selectedBooking?.bookingStop}</p>
             <p>TruckLicensePlate: {selectedBooking?.truckLicensePlate}</p>
             <p>Warehouse Code: {selectedBooking?.warehouseCode}</p>
