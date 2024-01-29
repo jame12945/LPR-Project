@@ -9,9 +9,6 @@ import { IoChevronDownOutline } from 'react-icons/io5'
 import { Modal, Input, Space } from 'antd'
 import type { SearchProps } from 'antd/es/input/Search'
 
-//ทำตารางย่อยเมื่อกด BookingId  okในเบื้องต้น
-//ทำส่วนนี้ใช้ text ธรรมดา กับ dayjs  รถมาถึงภายในช่วงเวลาที่นัดหมาย    Date:27-12-2023   Time:11:30
-//search
 //เปลี่ยนสี table ให้เป็น sky
 
 function TableDynamic() {
@@ -101,6 +98,17 @@ function TableDynamic() {
                 </Dropdown>
               ),
             },
+            // {
+            //   title: 'Image',
+            //   dataIndex:
+            //     'https://plus.unsplash.com/premium_photo-1666787742869-54bd5c564d47?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+            //   render: () => (
+            //     <img
+            //       className="w-10 h-10"
+            //       src={`https://plus.unsplash.com/premium_photo-1666787742869-54bd5c564d47?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D`}
+            //     />
+            //   ),
+            // },
           ]
 
           setColumn(cols)
