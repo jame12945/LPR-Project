@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start:web": "vite",
+    "start:web": "vite --host",
     "start": "vite",
     "tauri": "tauri",
     "dev": "tauri dev",
@@ -25,6 +25,7 @@
     "react-loading": "^2.0.3",
     "react-router-dom": "^6.21.3",
     "react-toastify": "^10.0.4",
+    "socket.io-client": "^4.7.4",
     "styled-components": "^6.1.8",
     "twin.macro": "^3.4.1"
   },

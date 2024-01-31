@@ -12,7 +12,6 @@ import type { SearchProps } from 'antd/es/input/Search'
 //เปลี่ยนสี table ให้เป็น sky
 
 function TableDynamic() {
-  const [columns, setColumn] = useState([])
   const [dataSource, setDataSource] = useState([])
   const [selectedId, setSelectedId] = useState('')
   const [modalVisible, setModalVisible] = useState(false)
@@ -24,94 +23,13 @@ function TableDynamic() {
     const fetchData = async () => {
       try {
         const response = await axios.post(
-          'http://localhost:3000/booking-fe/filter',
+          'http://192.168.1.5:3000/booking-fe/filter',
           {}
         )
+        console.log(response)
         const data = response.data.data.filterDateBooking || []
         setResponseData(data)
         if (data.length > 0) {
-          const cols = [
-            {
-              title: 'Type',
-              dataIndex: 'truckType',
-              render: (text) => (
-                <div className="flex">
-                  <GiTruck className=" text-4xl mr-4" />
-                  <div className="mt-2">{text}</div>
-                </div>
-              ),
-            },
-            {
-              title: 'Appointment Date',
-              dataIndex: 'bookingDate',
-              render: (text, record) => (
-                <div>
-                  <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
-                  <div className=" text-green">
-                    ( {dayjs(record.bookingStart, 'HH:mm:ss').format('HH:mm')} -{' '}
-                    {dayjs(record.bookingStop, 'HH:mm:ss').format('HH:mm')} )
-                  </div>
-                </div>
-              ),
-            },
-            {
-              title: 'Car Registration',
-              dataIndex: 'truckLicensePlate',
-            },
-            {
-              title: 'Driver',
-              dataIndex: 'driverName',
-            },
-            {
-              title: 'BookingId',
-              dataIndex: 'id',
-              render: (text, record) => (
-                <>
-                  <div
-                    className="bg-sky rounded-md px-2 py-1.5 text-center hover:bg-rain hover:text-white"
-                    onClick={() => handleBooking(record)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {text}
-                  </div>
-                </>
-              ),
-            },
-            {
-              title: 'Manage',
-              dataIndex: 'manage',
-              render: (_, record) => (
-                <Dropdown
-                  overlay={
-                    <Menu onClick={(e) => handleMenuClick(e, record.id)}>
-                      <Menu.Item key="CheckIn">CheckIn</Menu.Item>
-                      <Menu.Item key="OpenGate">OpenGate</Menu.Item>
-                    </Menu>
-                  }
-                >
-                  <Button className="bg-sky flex">
-                    <span>Action</span>
-                    <div className="flex items-center justify-center ml-2 mt-1.5 ">
-                      <IoChevronDownOutline />
-                    </div>
-                  </Button>
-                </Dropdown>
-              ),
-            },
-            // {
-            //   title: 'Image',
-            //   dataIndex:
-            //     'https://plus.unsplash.com/premium_photo-1666787742869-54bd5c564d47?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-            //   render: () => (
-            //     <img
-            //       className="w-10 h-10"
-            //       src={`https://plus.unsplash.com/premium_photo-1666787742869-54bd5c564d47?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D`}
-            //     />
-            //   ),
-            // },
-          ]
-
-          setColumn(cols)
           setDataSource(data)
         }
       } catch (error) {
@@ -125,6 +43,86 @@ function TableDynamic() {
     }, 30000)
     return () => clearInterval(interval)
   }, [])
+  const cols = [
+    {
+      title: 'Type',
+      dataIndex: 'truckType',
+      render: (text) => (
+        <div className="flex">
+          <GiTruck className=" text-4xl mr-4" />
+          <div className="mt-2">{text}</div>
+        </div>
+      ),
+    },
+    {
+      title: 'Appointment Date',
+      dataIndex: 'bookingDate',
+      render: (text, record) => (
+        <div>
+          <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
+          <div className=" text-green">
+            ( {dayjs(record.bookingStart, 'HH:mm:ss').format('HH:mm')} -{' '}
+            {dayjs(record.bookingStop, 'HH:mm:ss').format('HH:mm')} )
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Car Registration',
+      dataIndex: 'truckLicensePlate',
+    },
+    {
+      title: 'Driver',
+      dataIndex: 'driverName',
+    },
+    {
+      title: 'BookingId',
+      dataIndex: 'id',
+      render: (text, record) => (
+        <>
+          <div
+            className="bg-sky rounded-md px-2 py-1.5 text-center hover:bg-rain hover:text-white"
+            onClick={() => handleBooking(record)}
+            style={{ cursor: 'pointer' }}
+          >
+            {text}
+          </div>
+        </>
+      ),
+    },
+    {
+      title: 'Manage',
+      dataIndex: 'manage',
+      render: (_, record) => (
+        <Dropdown
+          overlay={
+            <Menu onClick={(e) => handleMenuClick(e, record.id)}>
+              <Menu.Item key="CheckIn">CheckIn</Menu.Item>
+              <Menu.Item key="OpenGate">OpenGate</Menu.Item>
+            </Menu>
+          }
+        >
+          <Button className="bg-sky flex">
+            <span>Action</span>
+            <div className="flex items-center justify-center ml-2 mt-1.5 ">
+              <IoChevronDownOutline />
+            </div>
+          </Button>
+        </Dropdown>
+      ),
+    },
+    // {
+    //   title: 'Image',
+    //   dataIndex:
+    //     'https://plus.unsplash.com/premium_photo-1666787742869-54bd5c564d47?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    //   render: () => (
+    //     <img
+    //       className="w-10 h-10"
+    //       src={`https://plus.unsplash.com/premium_photo-1666787742869-54bd5c564d47?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D`}
+    //     />
+    //   ),
+    // },
+  ]
 
   const handleMenuClick = async (e, bookingId) => {
     if (e.key === 'CheckIn') {
@@ -196,7 +194,7 @@ function TableDynamic() {
           className="w-80 flex items-end"
         ></Search>
       </div>
-      <Table columns={columns} dataSource={dataSource} />
+      <Table columns={cols} dataSource={dataSource} />
       <ToastContainer />
       <Modal
         title={`Booking Details : ${selectedBooking?.id}`}
