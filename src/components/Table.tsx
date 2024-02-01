@@ -23,7 +23,7 @@ function TableDynamic() {
     const fetchData = async () => {
       try {
         const response = await axios.post(
-          'http://192.168.1.5:3000/booking-fe/filter',
+          'http://192.168.1.105:3000/booking-fe/filter',
           {}
         )
         console.log(response)
@@ -62,14 +62,14 @@ function TableDynamic() {
           <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
           <div className=" text-green">
             ( {dayjs(record.bookingStart, 'HH:mm:ss').format('HH:mm')} -{' '}
-            {dayjs(record.bookingStop, 'HH:mm:ss').format('HH:mm')} )
+            {dayjs(record.bookingEnd, 'HH:mm:ss').format('HH:mm')} )
           </div>
         </div>
       ),
     },
     {
       title: 'Car Registration',
-      dataIndex: 'truckLicensePlate',
+      dataIndex: 'licensePlate',
     },
     {
       title: 'Driver',
@@ -77,7 +77,7 @@ function TableDynamic() {
     },
     {
       title: 'BookingId',
-      dataIndex: 'id',
+      dataIndex: 'bookingId',
       render: (text, record) => (
         <>
           <div
@@ -96,7 +96,7 @@ function TableDynamic() {
       render: (_, record) => (
         <Dropdown
           overlay={
-            <Menu onClick={(e) => handleMenuClick(e, record.id)}>
+            <Menu onClick={(e) => handleMenuClick(e, record.bookingId)}>
               <Menu.Item key="CheckIn">CheckIn</Menu.Item>
               <Menu.Item key="OpenGate">OpenGate</Menu.Item>
             </Menu>
@@ -210,7 +210,7 @@ function TableDynamic() {
               {dayjs(selectedBooking?.bookingDate).format('YYYY-MM-DD')}
             </p>
             <p>Booking Start: {selectedBooking?.bookingStart}</p>{' '}
-            <p>Booking Stop: {selectedBooking?.bookingStop}</p>
+            <p>Booking End: {selectedBooking?.bookingEnd}</p>
             <p>TruckLicensePlate: {selectedBooking?.truckLicensePlate}</p>
             <p>Warehouse Code: {selectedBooking?.warehouseCode}</p>
             <p>Truck Type: {selectedBooking?.truckType}</p>
