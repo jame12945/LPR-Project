@@ -23,6 +23,7 @@ const config = {
       green: '#22c55e',
       sky: '#bae6fd',
       rain: '#312e81',
+      amber: '#f59e0b',
     },
   },
   plugins: [],
