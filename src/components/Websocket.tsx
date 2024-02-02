@@ -1,49 +1,110 @@
 import { useContext, useEffect, useState } from 'react'
 import { WebSocketContext } from '../contexts/WebsocketContext'
-import { Table, Menu, Dropdown, Button } from 'antd'
+import { Table, Menu, Dropdown, Button, Input } from 'antd'
 import dayjs from 'dayjs'
 import { IoChevronDownOutline } from 'react-icons/io5'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
+import { BookingSocketData } from '../type/booking'
 
 export const WebSocket = () => {
   const [dataSource, setDataSource] = useState([])
+  const [dataSourceNewTable, setDataSourceNewTable] = useState([])
   const [selectedId, setSelectedId] = useState('')
   const [licensePlate, setlicensePlate] = useState('')
-  const [lane, setLane] = useState('')
+  const [lane, setLane] = useState(['1', '2', '3'])
   const [plateImage, setPlateImage] = useState('')
   const [fullImage, setFullImage] = useState('')
-  const socket = useContext(WebSocketContext)
+  const [receive, setReceive] = useState([])
+  const [matchItems, setMatchItems] = useState([])
+  const [data] = useState([
+    { key: 1, lane: '1' },
+    { key: 2, lane: '2' },
+    { key: 3, lane: '3' },
+    { key: 4, lane: '4' },
+    { key: 5, lane: '5' },
+  ])
   useEffect(() => {
-    const fetchData = async () => {
-      socket.on('connect', () => {
-        console.log('Connected!')
-      })
-      socket.on('onRecieveLpr', (data) => {
-        console.log('onRecieveLpr event recieved')
-        console.log(data)
-        const response = data.data.selectBooking.data.filterBookingsAfterFix
-        console.log('response....')
-        console.log(response)
-        setDataSource(response)
-      })
-
-      return () => {
-        console.log('Unregistered Events...')
-        socket.off('connected')
-        socket.off('onRecieveLpr')
+    const matchedItems = []
+    dataSourceNewTable.forEach((item) => {
+      const foundLane = data.find((d) => d.lane === item.lane)
+      if (foundLane) {
+        console.log('Found matching lane:', foundLane)
+        console.log('Matching item:', item)
+        matchedItems.push(item)
       }
+    })
+    setMatchItems(matchedItems)
+  }, [dataSourceNewTable])
+
+  const socket = useContext(WebSocketContext)
+
+  useEffect(() => {
+    // Connect to socket
+    socket.on('connect', () => {
+      console.log('Connected!')
+    })
+
+    socket.on('onRecieveLpr', handleRecieveLpr)
+    return () => {
+      console.log('Unregistering Events...')
+      socket.off('connect')
+      socket.off('onRecieveLpr', handleRecieveLpr)
     }
-    fetchData()
   }, [])
-  const cols = [
+  useEffect(() => {
+    const allLane = ['1', '2', '3', '4', '5']
+    const updatedReceive = allLane.map((lane) => {
+      const matchingDatas = matchItems.find((item) => item.lane === lane)
+      return {
+        lane,
+        full_image: matchingDatas ? matchingDatas.full_image : '',
+        plate_image: matchingDatas ? matchingDatas.plate_image : '',
+        licensePlate: matchingDatas ? matchingDatas.licensePlate : '',
+        bookingId: matchingDatas ? matchingDatas.bookingId : '',
+        status: matchingDatas ? matchingDatas.status : '',
+        bookingDate: matchingDatas ? matchingDatas.bookingDate : '',
+        bookingStart: matchingDatas ? matchingDatas.bookingStart : '',
+        bookingEnd: matchingDatas ? matchingDatas.bookingEnd : '',
+      }
+    })
+    setReceive(updatedReceive)
+  }, [matchItems])
+
+  const handleRecieveLpr = (data: BookingSocketData[]) => {
+    console.log('Receive data')
+    console.log(data)
+    const updatedData = data.map((item) => ({
+      ...item,
+      bookingStart: item.bookingStart || '',
+      bookingEnd: item.bookingEnd || '',
+    }))
+    setDataSourceNewTable(updatedData)
+    if (data.length > 0) {
+      data.forEach((item) => {
+        if (item.bookingId) {
+          console.log('data coming')
+          setDataSource(data)
+        } else {
+          console.log('no booking data')
+        }
+      })
+      console.log('dataSourceNewTable is :')
+      console.log(dataSourceNewTable)
+    } else {
+      console.log('no response data coming!!!!')
+    }
+  }
+  const testColumns = [
     {
       title: 'Lane',
       dataIndex: 'lane',
+      key: 'lane',
     },
     {
       title: 'MonitorRead',
       dataIndex: 'full_image',
+      key: 'full_image',
       render: (text, record) => (
         <img src={record.full_image} alt="Monitor Read" className="w-20 h-18" />
       ),
@@ -51,6 +112,7 @@ export const WebSocket = () => {
     {
       title: 'License Plate',
       dataIndex: 'plate_image',
+      key: 'plate_image',
       render: (text, record) => (
         <img
           src={record.plate_image}
@@ -62,17 +124,27 @@ export const WebSocket = () => {
     {
       title: 'Car Registration',
       dataIndex: 'licensePlate',
+      key: 'licensePlate',
     },
     {
       title: 'BookingId',
       dataIndex: 'bookingId',
+      key: 'bookingId',
     },
     {
-      title: 'status',
+      title: 'Status',
       dataIndex: 'status',
+      key: 'status',
       render: (text) => (
         <>
-          {text && (
+          {text === 'success' && (
+            <div className="bg-green rounded-md h-8">
+              <div className="pt-1 text-center text-white font-medium">
+                {text}
+              </div>
+            </div>
+          )}
+          {text != 'success' && (
             <div className=" bg-amber rounded-md  h-8">
               <div className=" pt-1 text-center text-white font-medium">
                 {text}
@@ -83,8 +155,9 @@ export const WebSocket = () => {
       ),
     },
     {
-      title: 'BookingId',
+      title: 'BookingDate',
       dataIndex: 'bookingDate',
+      key: 'bookingDate',
       render: (text, record) => (
         <div>
           <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
@@ -98,6 +171,7 @@ export const WebSocket = () => {
     {
       title: 'Manage',
       dataIndex: 'manage',
+      key: 'manage',
       render: (_, record) => (
         <Dropdown
           overlay={
@@ -128,6 +202,7 @@ export const WebSocket = () => {
       ),
     },
   ]
+  //do here
 
   const handleMenuClick = async (
     e,
@@ -172,7 +247,24 @@ export const WebSocket = () => {
           }
           return item
         })
-        setDataSource(updatedDataSource)
+        const allLane = ['1', '2', '3', '4', '5']
+        const updatedReceive = allLane.map((lane) => {
+          const matchingData = updatedDataSource.find(
+            (item) => item.lane === lane
+          )
+          return {
+            lane,
+            full_image: matchingData ? matchingData.full_image : '',
+            plate_image: matchingData ? matchingData.plate_image : '',
+            licensePlate: matchingData ? matchingData.licensePlate : '',
+            bookingId: matchingData ? matchingData.bookingId : '',
+            status: matchingData ? matchingData.status : '',
+            bookingDate: matchingData ? matchingData.bookingDate : '',
+            bookingStart: matchingData ? matchingData.bookingStart : '',
+            bookingEnd: matchingData ? matchingData.bookingEnd : '',
+          }
+        })
+        setReceive(updatedReceive)
       } catch (error) {
         console.error('CheckIn Error: ', error)
         toast.error('Check-in failed!')
@@ -191,8 +283,8 @@ export const WebSocket = () => {
   return (
     <div>
       <div>
-        <Table columns={cols} dataSource={dataSource} />
         <ToastContainer />
+        <Table columns={testColumns} dataSource={receive} />
       </div>
     </div>
   )

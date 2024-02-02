@@ -166,7 +166,7 @@ function TableDynamic() {
   const onSearch: SearchProps['onSearch'] = (value, _e, info) => {
     console.log(info?.source, value)
     const filterData = responseData.filter((item) =>
-      item.truckLicensePlate.includes(value)
+      item.licensePlate.includes(value)
     )
     console.log(
       'filterData................................................................'
