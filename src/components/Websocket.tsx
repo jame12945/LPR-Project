@@ -6,7 +6,38 @@ import { IoChevronDownOutline } from 'react-icons/io5'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import { BookingSocketData } from '../type/booking'
+import { ColumnsType } from 'antd/es/table'
 
+export interface BookingType {
+  lane: string
+  full_image: string
+  plate_image: string
+  licensePLate: string
+  bookingId: string
+  status: string
+  bookingDate: string
+  bookingStart: string
+  bookingEnd: string
+}
+export interface ReceiveData {
+  full_image: string
+  plate_image: string
+  licensePlate: string
+  booking: string
+  bookingId: string
+  status: string
+  bookingDate: string
+  bookingStart: string
+  bookingEnd: string
+}
+
+export interface MenuClickParams {
+  bookingId: string
+  licensePlate: string
+  lane: string
+  plateImage: string
+  fullImage: string
+}
 export const WebSocket = () => {
   const [dataSource, setDataSource] = useState([])
   const [dataSourceNewTable, setDataSourceNewTable] = useState([])
@@ -28,24 +59,38 @@ export const WebSocket = () => {
   const socket = useContext(WebSocketContext)
 
   useEffect(() => {
-    // Connect to socket
-    socket.on('connect', () => {
-      console.log('Connected!')
-    })
+    const fetchData = async () => {
+      try {
+        socket.on('connect', () => {
+          console.log('Connected!')
+        })
 
-    socket.on('onRecieveLpr', handleRecieveLpr)
-    return () => {
-      console.log('Unregistering Events...')
-      socket.off('connect')
-      socket.off('onRecieveLpr', handleRecieveLpr)
+        socket.on('onRecieveLpr', handleRecieveLpr)
+        return () => {
+          console.log('Unregistering Events...')
+          socket.off('connect')
+          socket.off('onRecieveLpr', handleRecieveLpr)
+        }
+      } catch (err) {
+        console.log('error fetching Data')
+      }
     }
+    const clearMatchItems = () => {
+      setMatchItems([])
+    }
+
+    fetchData()
+    clearMatchItems()
+    const interval = setInterval(clearMatchItems, 30000)
+    return () => clearInterval(interval)
   }, [])
   useEffect(() => {
     const updatedReceive = Object.keys(allLane).map((key) => {
       const lanes = allLane[key]
       console.log('Got lane')
       console.log(lanes)
-      const matchingDatas = matchItems.find((item) => item.lane === lanes) || {}
+      const matchingDatas: ReceiveData =
+        matchItems.find((item) => item.lane === lanes) || {}
 
       return {
         lane: lanes,
@@ -87,7 +132,7 @@ export const WebSocket = () => {
       console.log('no response data coming!!!!')
     }
   }
-  const testColumns = [
+  const testColumns: ColumnsType<BookingType> = [
     {
       title: 'Lane',
       dataIndex: 'lane',
@@ -177,13 +222,17 @@ export const WebSocket = () => {
       dataIndex: 'bookingDate',
       key: 'bookingDate',
       render: (text, record) => (
-        <div>
-          <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
-          <div className="text-green">
-            ({dayjs(record.bookingStart, 'HH:mm:ss').format('HH:mm')} -{' '}
-            {dayjs(record.bookingEnd, 'HH:mm:ss').format('HH:mm')})
-          </div>
-        </div>
+        <>
+          {text && (
+            <div>
+              <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
+              <div className="text-green">
+                ({dayjs(record.bookingStart, 'HH:mm:ss').format('HH:mm')} -{' '}
+                {dayjs(record.bookingEnd, 'HH:mm:ss').format('HH:mm')})
+              </div>
+            </div>
+          )}
+        </>
       ),
     },
     {
@@ -193,18 +242,7 @@ export const WebSocket = () => {
       render: (_, record) => (
         <Dropdown
           overlay={
-            <Menu
-              onClick={(e) =>
-                handleMenuClick(
-                  e,
-                  record.bookingId,
-                  record.licensePlate,
-                  record.lane,
-                  record.plate_image,
-                  record.full_image
-                )
-              }
-            >
+            <Menu onClick={(e) => handleMenuClick(e, record)}>
               <Menu.Item key="CheckIn">CheckIn</Menu.Item>
               <Menu.Item key="OpenGate">OpenGate</Menu.Item>
             </Menu>
@@ -222,15 +260,9 @@ export const WebSocket = () => {
   ]
   //do here
 
-  const handleMenuClick = async (
-    e,
-    bookingId,
-    licensePlate,
-    lane,
-    plateImage,
-    fullImage
-  ) => {
+  const handleMenuClick = async (e: any, record: MenuClickParams) => {
     if (e.key === 'CheckIn') {
+      const { e, bookingId, licensePlate, lane, plateImage, fullImage } = record
       setSelectedId(bookingId)
       setlicensePlate(licensePlate)
       setLane(lane)
@@ -272,6 +304,7 @@ export const WebSocket = () => {
         toast.error('Check-in failed!')
       }
     } else {
+      const { bookingId } = record
       setSelectedId(bookingId)
       try {
         const response = await axios.get('http://localhost:3000/opengate', {})
