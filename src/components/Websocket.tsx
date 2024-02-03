@@ -7,7 +7,7 @@ import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import { BookingSocketData } from '../type/booking'
 
-export const WebSocket = () => {
+function WebSocket() {
   const [dataSource, setDataSource] = useState([])
   const [dataSourceNewTable, setDataSourceNewTable] = useState([])
   const [selectedId, setSelectedId] = useState('')
@@ -17,25 +17,13 @@ export const WebSocket = () => {
   const [fullImage, setFullImage] = useState('')
   const [receive, setReceive] = useState([])
   const [matchItems, setMatchItems] = useState([])
-  const [data] = useState([
-    { key: 1, lane: '1' },
-    { key: 2, lane: '2' },
-    { key: 3, lane: '3' },
-    { key: 4, lane: '4' },
-    { key: 5, lane: '5' },
-  ])
-  useEffect(() => {
-    const matchedItems = []
-    dataSourceNewTable.forEach((item) => {
-      const foundLane = data.find((d) => d.lane === item.lane)
-      if (foundLane) {
-        console.log('Found matching lane:', foundLane)
-        console.log('Matching item:', item)
-        matchedItems.push(item)
-      }
-    })
-    setMatchItems(matchedItems)
-  }, [dataSourceNewTable])
+  const [allLane, setAllLane] = useState({
+    lane1: '1',
+    lane2: '2',
+    lane3: '3',
+    lane4: '4',
+    lane5: '5',
+  })
 
   const socket = useContext(WebSocketContext)
 
@@ -53,11 +41,14 @@ export const WebSocket = () => {
     }
   }, [])
   useEffect(() => {
-    const allLane = ['1', '2', '3', '4', '5']
-    const updatedReceive = allLane.map((lane) => {
-      const matchingDatas = matchItems.find((item) => item.lane === lane)
+    const updatedReceive = Object.keys(allLane).map((key) => {
+      const lanes = allLane[key]
+      console.log('Got lane')
+      console.log(lanes)
+      const matchingDatas = matchItems.find((item) => item.lane === lanes) || {}
+
       return {
-        lane,
+        lane: lanes,
         full_image: matchingDatas ? matchingDatas.full_image : '',
         plate_image: matchingDatas ? matchingDatas.plate_image : '',
         licensePlate: matchingDatas ? matchingDatas.licensePlate : '',
@@ -69,11 +60,12 @@ export const WebSocket = () => {
       }
     })
     setReceive(updatedReceive)
-  }, [matchItems])
+  }, [matchItems, allLane])
 
   const handleRecieveLpr = (data: BookingSocketData[]) => {
     console.log('Receive data')
     console.log(data)
+    setMatchItems(data)
     const updatedData = data.map((item) => ({
       ...item,
       bookingStart: item.bookingStart || '',
@@ -106,7 +98,15 @@ export const WebSocket = () => {
       dataIndex: 'full_image',
       key: 'full_image',
       render: (text, record) => (
-        <img src={record.full_image} alt="Monitor Read" className="w-20 h-18" />
+        <>
+          {text && (
+            <img
+              src={record.full_image}
+              alt="Monitor Read fullImage"
+              className="w-20 h-18"
+            />
+          )}
+        </>
       ),
     },
     {
@@ -114,11 +114,15 @@ export const WebSocket = () => {
       dataIndex: 'plate_image',
       key: 'plate_image',
       render: (text, record) => (
-        <img
-          src={record.plate_image}
-          alt="Monitor Read LicensePlate"
-          className="w-18 h-16"
-        />
+        <>
+          {text && (
+            <img
+              src={record.plate_image}
+              alt="Monitor Read plateImage"
+              className="w-20 h-18"
+            />
+          )}
+        </>
       ),
     },
     {
@@ -144,10 +148,18 @@ export const WebSocket = () => {
               </div>
             </div>
           )}
-          {text != 'success' && (
-            <div className=" bg-amber rounded-md  h-8">
+          {text === 'early' ||
+            (text === 'late' && (
+              <div className=" bg-amber rounded-md  h-8">
+                <div className=" pt-1 text-center text-white font-medium">
+                  {text}
+                </div>
+              </div>
+            ))}
+          {text != 'early' && text != 'late' && text != 'success' && (
+            <div className=" bg-rain rounded-md  h-8">
               <div className=" pt-1 text-center text-white font-medium">
-                {text}
+                waiting
               </div>
             </div>
           )}
@@ -236,8 +248,9 @@ export const WebSocket = () => {
           response.data.data.checkInManualWithId.data.stampStatusData.status
         )
         toast.success('ระบบทำการ CheckIn เรียบร้อยแล้ว')
-        const updatedDataSource = dataSource.map((item) => {
+        const updatedReceive = receive.map((item) => {
           if (item.bookingId === bookingId) {
+            console.log('Checking in successfully for')
             return {
               ...item,
               status:
@@ -246,23 +259,6 @@ export const WebSocket = () => {
             }
           }
           return item
-        })
-        const allLane = ['1', '2', '3', '4', '5']
-        const updatedReceive = allLane.map((lane) => {
-          const matchingData = updatedDataSource.find(
-            (item) => item.lane === lane
-          )
-          return {
-            lane,
-            full_image: matchingData ? matchingData.full_image : '',
-            plate_image: matchingData ? matchingData.plate_image : '',
-            licensePlate: matchingData ? matchingData.licensePlate : '',
-            bookingId: matchingData ? matchingData.bookingId : '',
-            status: matchingData ? matchingData.status : '',
-            bookingDate: matchingData ? matchingData.bookingDate : '',
-            bookingStart: matchingData ? matchingData.bookingStart : '',
-            bookingEnd: matchingData ? matchingData.bookingEnd : '',
-          }
         })
         setReceive(updatedReceive)
       } catch (error) {
@@ -280,6 +276,7 @@ export const WebSocket = () => {
       }
     }
   }
+
   return (
     <div>
       <div>
@@ -289,3 +286,5 @@ export const WebSocket = () => {
     </div>
   )
 }
+
+export default WebSocket
