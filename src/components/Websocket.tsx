@@ -148,14 +148,20 @@ export const WebSocket = () => {
               </div>
             </div>
           )}
-          {text === 'early' ||
-            (text === 'late' && (
-              <div className=" bg-amber rounded-md  h-8">
-                <div className=" pt-1 text-center text-white font-medium">
-                  {text}
-                </div>
+          {text === 'late' && (
+            <div className=" bg-amber rounded-md  h-8">
+              <div className=" pt-1 text-center text-white font-medium">
+                {text}
               </div>
-            ))}
+            </div>
+          )}
+          {text === 'early' && (
+            <div className=" bg-amber rounded-md  h-8">
+              <div className=" pt-1 text-center text-white font-medium">
+                {text}
+              </div>
+            </div>
+          )}
           {text != 'early' && text != 'late' && text != 'success' && (
             <div className=" bg-rain rounded-md  h-8">
               <div className=" pt-1 text-center text-white font-medium">
