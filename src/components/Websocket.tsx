@@ -7,7 +7,7 @@ import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import { BookingSocketData } from '../type/booking'
 
-function WebSocket() {
+export const WebSocket = () => {
   const [dataSource, setDataSource] = useState([])
   const [dataSourceNewTable, setDataSourceNewTable] = useState([])
   const [selectedId, setSelectedId] = useState('')
@@ -286,5 +286,3 @@ function WebSocket() {
     </div>
   )
 }
-
-export default WebSocket
