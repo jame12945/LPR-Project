@@ -1,13 +1,24 @@
 import { useContext, useEffect, useState } from 'react'
 import { WebSocketContext } from '../contexts/WebsocketContext'
-import { Table, Menu, Dropdown, Button, Input } from 'antd'
+import {
+  Table,
+  Menu,
+  Dropdown,
+  Button,
+  Input,
+  Divider,
+  notification,
+  Space,
+  Modal,
+} from 'antd'
 import dayjs from 'dayjs'
 import { IoChevronDownOutline } from 'react-icons/io5'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import { BookingSocketData } from '../type/booking'
 import { ColumnsType } from 'antd/es/table'
-
+import type { NotificationArgsProps } from 'antd'
+type NotificationPlacement = NotificationArgsProps['placement']
 export interface BookingType {
   lane: string
   full_image: string
@@ -55,7 +66,11 @@ export const WebSocket = () => {
     lane4: '4',
     lane5: '5',
   })
-
+  const [modalVisible, setModalVisible] = useState(false)
+  const [inputdata, setInputData] = useState({
+    license_plate_number: '',
+    lane: '',
+  })
   const socket = useContext(WebSocketContext)
 
   useEffect(() => {
@@ -87,8 +102,6 @@ export const WebSocket = () => {
   useEffect(() => {
     const updatedReceive = Object.keys(allLane).map((key) => {
       const lanes = allLane[key]
-      console.log('Got lane')
-      console.log(lanes)
       const matchingDatas: ReceiveData =
         matchItems.find((item) => item.lane === lanes) || {}
 
@@ -130,6 +143,7 @@ export const WebSocket = () => {
       console.log(dataSourceNewTable)
     } else {
       console.log('no response data coming!!!!')
+      setModalVisible(true)
     }
   }
   const testColumns: ColumnsType<BookingType> = [
@@ -315,12 +329,59 @@ export const WebSocket = () => {
       }
     }
   }
-
+  const handleModalCancel = () => {
+    setModalVisible(false)
+  }
+  const handleModalOk = async () => {
+    console.log('License Plate Number', inputdata.license_plate_number)
+    console.log('Lane', inputdata.lane)
+    try {
+      const response = await axios.post('http://localhost:3000/recieve', {
+        license_plate_number: inputdata.license_plate_number,
+        lane: inputdata.lane,
+      })
+      console.log(`Checking in successfully for booking of ${bookingId}`)
+      console.log('Response:', response)
+    } catch (error) {
+      // toast.error('Fetch Data Error !!!')
+      //อาจจะให้กรอกข้อมูลใหม่
+      console.log('Input Not Correct')
+    }
+    setModalVisible(false)
+  }
   return (
     <div>
       <div>
         <ToastContainer />
         <Table columns={testColumns} dataSource={receive} />
+        <Modal
+          title="Input LicensePlate and Lane"
+          visible={modalVisible}
+          onCancel={handleModalCancel}
+          onOk={handleModalOk}
+        >
+          <Input
+            placeholder="Enter LicensePlate"
+            value={inputdata.license_plate_number}
+            onChange={(e) =>
+              setInputData({
+                ...inputdata,
+                license_plate_number: e.target.value,
+              })
+            }
+          />
+          <Input
+            className="mt-2"
+            placeholder="Enter Lane"
+            value={inputdata.lane}
+            onChange={(e) =>
+              setInputData({
+                ...inputdata,
+                lane: e.target.value,
+              })
+            }
+          />
+        </Modal>
       </div>
     </div>
   )
