@@ -69,7 +69,7 @@ export const WebSocket = () => {
     const fetchData = async () => {
       try {
         socket.on('connect', () => {
-          console.log('Connected!')
+          console.log('Connected')
         })
 
         socket.on('onRecieveLpr', (data) => {
@@ -78,21 +78,20 @@ export const WebSocket = () => {
             setIsHandleRecieveLprCalled(true)
           }
         })
-      } catch (err) {
-        console.log('error fetching Data')
+      } catch (error) {
+        console.log('error fetching data')
       }
     }
 
-    const clearMatchItems = () => {
+    const clearMatchItem = () => {
       setMatchItems([])
       setIsHandleRecieveLprCalled(false)
     }
-
     fetchData()
-    const interval = setInterval(clearMatchItems, 30000)
-
+    clearMatchItem()
+    const interval = setInterval(clearMatchItem, 30000)
     return () => {
-      console.log('Unregistering Events...')
+      console.log('Unregistered Event!!')
       socket.off('connect')
       socket.off('onRecieveLpr')
       clearInterval(interval)
