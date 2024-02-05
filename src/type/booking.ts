@@ -18,4 +18,5 @@ export interface BookingSocketData {
   lane?: string | null
   plate_image?: string | null
   full_image?: string | null
+  resultMessage?: string | null
 }

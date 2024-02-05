@@ -1,24 +1,13 @@
 import { useContext, useEffect, useState } from 'react'
 import { WebSocketContext } from '../contexts/WebsocketContext'
-import {
-  Table,
-  Menu,
-  Dropdown,
-  Button,
-  Input,
-  Divider,
-  notification,
-  Space,
-  Modal,
-} from 'antd'
+import { Table, Menu, Dropdown, Button, Input, Modal } from 'antd'
 import dayjs from 'dayjs'
 import { IoChevronDownOutline } from 'react-icons/io5'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import { BookingSocketData } from '../type/booking'
 import { ColumnsType } from 'antd/es/table'
-import type { NotificationArgsProps } from 'antd'
-type NotificationPlacement = NotificationArgsProps['placement']
+
 export interface BookingType {
   lane: string
   full_image: string
@@ -58,6 +47,7 @@ export const WebSocket = () => {
   const [plateImage, setPlateImage] = useState('')
   const [fullImage, setFullImage] = useState('')
   const [receive, setReceive] = useState([])
+  const [isOfficer, setIsOfficer] = useState([])
   const [matchItems, setMatchItems] = useState([])
   const [allLane, setAllLane] = useState({
     lane1: '1',
@@ -135,8 +125,10 @@ export const WebSocket = () => {
         if (item.bookingId) {
           console.log('data coming')
           setDataSource(data)
-        } else {
+        } else if (item.resultMessage) {
           console.log('no booking data')
+          setIsOfficer(data)
+          toast.success('ระบบกำลังเปิดไม้กั้น')
         }
       })
       console.log('dataSourceNewTable is :')
@@ -328,6 +320,12 @@ export const WebSocket = () => {
         toast.error('OpenGate Error')
       }
     }
+  }
+
+  const handleOfficer = () => {
+    console.log('IsOfficer...')
+    console.log(isOfficer)
+    toast.success('ระบบกำลังเปิดไม้กั้น')
   }
   const handleModalCancel = () => {
     setModalVisible(false)
