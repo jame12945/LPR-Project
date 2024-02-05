@@ -23,7 +23,7 @@ function TableDynamic() {
     const fetchData = async () => {
       try {
         const response = await axios.post(
-          'http://192.168.1.105:3000/booking-fe/filter',
+          'http://192.168.1.101:3000/booking-fe/filter',
           {}
         )
         console.log(response)

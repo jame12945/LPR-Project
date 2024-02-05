@@ -49,6 +49,8 @@ export const WebSocket = () => {
   const [receive, setReceive] = useState([])
   const [isOfficer, setIsOfficer] = useState([])
   const [matchItems, setMatchItems] = useState([])
+  const [isHandleRecieveLprCalled, setIsHandleRecieveLprCalled] =
+    useState(false)
   const [allLane, setAllLane] = useState({
     lane1: '1',
     lane2: '2',
@@ -70,25 +72,33 @@ export const WebSocket = () => {
           console.log('Connected!')
         })
 
-        socket.on('onRecieveLpr', handleRecieveLpr)
-        return () => {
-          console.log('Unregistering Events...')
-          socket.off('connect')
-          socket.off('onRecieveLpr', handleRecieveLpr)
-        }
+        socket.on('onRecieveLpr', (data) => {
+          if (!isHandleRecieveLprCalled) {
+            handleRecieveLpr(data)
+            setIsHandleRecieveLprCalled(true)
+          }
+        })
       } catch (err) {
         console.log('error fetching Data')
       }
     }
+
     const clearMatchItems = () => {
       setMatchItems([])
+      setIsHandleRecieveLprCalled(false)
     }
 
     fetchData()
-    clearMatchItems()
     const interval = setInterval(clearMatchItems, 30000)
-    return () => clearInterval(interval)
+
+    return () => {
+      console.log('Unregistering Events...')
+      socket.off('connect')
+      socket.off('onRecieveLpr')
+      clearInterval(interval)
+    }
   }, [])
+
   useEffect(() => {
     const updatedReceive = Object.keys(allLane).map((key) => {
       const lanes = allLane[key]
@@ -120,19 +130,22 @@ export const WebSocket = () => {
       bookingEnd: item.bookingEnd || '',
     }))
     setDataSourceNewTable(updatedData)
+    let hasBookingData = false
     if (data.length > 0) {
       data.forEach((item) => {
         if (item.bookingId) {
           console.log('data coming')
           setDataSource(data)
-        } else if (item.resultMessage) {
+          hasBookingData = true
+        } else if (item?.resultMessage) {
           console.log('no booking data')
           setIsOfficer(data)
-          toast.success('ระบบกำลังเปิดไม้กั้น')
         }
       })
-      console.log('dataSourceNewTable is :')
-      console.log(dataSourceNewTable)
+      if (hasBookingData === false) {
+        toast.success('ตรวจพบเป็นรถภายในองค์กร ระบบกำลังเปิดไม้กั้น')
+        return
+      }
     } else {
       console.log('no response data coming!!!!')
       setModalVisible(true)
@@ -322,11 +335,11 @@ export const WebSocket = () => {
     }
   }
 
-  const handleOfficer = () => {
-    console.log('IsOfficer...')
-    console.log(isOfficer)
-    toast.success('ระบบกำลังเปิดไม้กั้น')
-  }
+  // const handleOfficer = () => {
+  //   console.log('IsOfficer...')
+  //   console.log(isOfficer)
+  //   toast.success('ระบบกำลังเปิดไม้กั้น')
+  // }
   const handleModalCancel = () => {
     setModalVisible(false)
   }
@@ -354,7 +367,7 @@ export const WebSocket = () => {
         <Table columns={testColumns} dataSource={receive} />
         <Modal
           title="Input LicensePlate and Lane"
-          visible={modalVisible}
+          open={modalVisible}
           onCancel={handleModalCancel}
           onOk={handleModalOk}
         >
