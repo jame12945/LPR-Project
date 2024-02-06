@@ -10,8 +10,10 @@ function App() {
     <>
       <Navbar />
       <Routes>
+        <Route path="/" element={<LprPage />} />
         <Route path="/listview" element={<ListviewPage />} />
         <Route path="/lpr" element={<LprPage />} />
+        <Route path="/close" />
       </Routes>
     </>
   )

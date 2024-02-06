@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react'
 import { WebSocketContext } from '../contexts/WebsocketContext'
-import { Table, Menu, Dropdown, Button, Input, Modal } from 'antd'
+import { Table, Menu, Dropdown, Button, Input, Modal, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { IoChevronDownOutline } from 'react-icons/io5'
 import axios from 'axios'
@@ -29,6 +29,15 @@ export interface ReceiveData {
   bookingDate: string
   bookingStart: string
   bookingEnd: string
+  warehouseCode: string
+  truckType: string
+  companyCode: string
+  supCode: string
+  supName: string
+  operationType: string
+  driverName: string
+  lane: string
+  telNo: string
 }
 
 export interface MenuClickParams {
@@ -41,14 +50,16 @@ export interface MenuClickParams {
 export const WebSocket = () => {
   const [selectedId, setSelectedId] = useState('')
   const [licensePlate, setlicensePlate] = useState('')
-  const [lane, setLane] = useState(['1', '2', '3'])
+  const [lane, setLane] = useState([])
   const [plateImage, setPlateImage] = useState('')
   const [fullImage, setFullImage] = useState('')
   const [receive, setReceive] = useState([])
   const [isOfficer, setIsOfficer] = useState([])
   const [matchItems, setMatchItems] = useState([])
   const [isBooking, setIsBooking] = useState(false)
-
+  const [selectedBooking, setSelectedBooking] = useState<ReceiveData | null>(
+    null
+  )
   const [isHandleRecieveLprCalled, setIsHandleRecieveLprCalled] =
     useState(false)
   const [allLane, setAllLane] = useState({
@@ -59,10 +70,12 @@ export const WebSocket = () => {
     lane5: '5',
   })
   const [modalVisible, setModalVisible] = useState(false)
+  const [modalBookingVisible, setModalBookingVisible] = useState(false)
   const [inputdata, setInputData] = useState({
     license_plate_number: '',
     lane: '',
   })
+
   const socket = useContext(WebSocketContext)
 
   useEffect(() => {
@@ -114,6 +127,13 @@ export const WebSocket = () => {
         bookingDate: matchingDatas ? matchingDatas.bookingDate : '',
         bookingStart: matchingDatas ? matchingDatas.bookingStart : '',
         bookingEnd: matchingDatas ? matchingDatas.bookingEnd : '',
+        warehouseCode: matchingDatas ? matchingDatas.warehouseCode : '',
+        companyCode: matchingDatas ? matchingDatas.companyCode : '',
+        supCode: matchingDatas ? matchingDatas.supCode : '',
+        supName: matchingDatas ? matchingDatas.supName : '',
+        operationType: matchingDatas ? matchingDatas.operationType : '',
+        driverName: matchingDatas ? matchingDatas.driverName : '',
+        telNo: matchingDatas ? matchingDatas.telNo : '',
       }
     })
     setReceive(updatedReceive)
@@ -193,6 +213,18 @@ export const WebSocket = () => {
       title: 'BookingId',
       dataIndex: 'bookingId',
       key: 'bookingId',
+      render: (text, record) => (
+        <>
+          {record.bookingId && (
+            <div
+              className=" bg-sky rounded-md px-2 pt-1 h-8 flex justify-center cursor-pointer  hover:bg-rain hover:text-white"
+              onClick={() => handleBooking(record)}
+            >
+              {text}
+            </div>
+          )}
+        </>
+      ),
     },
     {
       title: 'Status',
@@ -201,30 +233,33 @@ export const WebSocket = () => {
       render: (text) => (
         <>
           {text === 'success' && (
-            <div className="bg-green rounded-md h-8">
+            <div className="bg-green rounded-md h-8 w-24">
               <div className="pt-1 text-center text-white font-medium">
                 {text}
               </div>
             </div>
           )}
           {text === 'late' && (
-            <div className=" bg-amber rounded-md  h-8">
+            <div className=" bg-amber rounded-md  h-8 w-24">
               <div className=" pt-1 text-center text-white font-medium">
                 {text}
               </div>
             </div>
           )}
           {text === 'early' && (
-            <div className=" bg-amber rounded-md  h-8">
+            <div className=" bg-amber rounded-md  h-8 w-24">
               <div className=" pt-1 text-center text-white font-medium">
                 {text}
               </div>
             </div>
           )}
           {text != 'early' && text != 'late' && text != 'success' && (
-            <div className=" bg-rain rounded-md  h-8">
-              <div className=" pt-1 text-center text-white font-medium">
-                waiting
+            <div className=" bg-rain rounded-md  h-8 pt-1 w-24">
+              <div className="flex justify-center">
+                <div className="  text-center text-white font-medium">
+                  waiting
+                </div>
+                <Spin className="pt-1 pl-2 " />
               </div>
             </div>
           )}
@@ -337,6 +372,9 @@ export const WebSocket = () => {
   const handleModalCancel = () => {
     setModalVisible(false)
   }
+  const handleModalBookingCancle = () => {
+    setModalBookingVisible(false)
+  }
   const handleModalOk = async () => {
     console.log('License Plate Number', inputdata.license_plate_number)
     console.log('Lane', inputdata.lane)
@@ -351,6 +389,11 @@ export const WebSocket = () => {
       console.log('Input Not Correct')
     }
     setModalVisible(false)
+  }
+
+  const handleBooking = (record: ReceiveData) => {
+    setSelectedBooking(record)
+    setModalBookingVisible(true)
   }
   return (
     <div>
@@ -392,6 +435,36 @@ export const WebSocket = () => {
               })
             }
           />
+        </Modal>
+        <Modal
+          title={`Booking Details : ${selectedBooking?.bookingId}`}
+          open={modalBookingVisible}
+          onCancel={handleModalBookingCancle}
+          footer={null}
+        >
+          <div className=" grid grid-flow-col justify-stretch">
+            <div>
+              <p>Booking Id: {selectedBooking?.bookingId}</p>
+              <p>
+                Booking Date:{' '}
+                {dayjs(selectedBooking?.bookingDate).format('YYYY-MM-DD')}
+              </p>
+              <p>Booking Start:{selectedBooking?.bookingStart}</p>
+              <p>Booking End: {selectedBooking?.bookingEnd}</p>
+              <p>TruckLicensePlate: {selectedBooking?.licensePlate}</p>
+              <p>Warehouse Code: {selectedBooking?.warehouseCode}</p>
+              <p>Truck Type: {selectedBooking?.truckType}</p>
+            </div>
+            <div>
+              <p> Company Code: {selectedBooking?.companyCode}</p>
+              <p> Sup Code: {selectedBooking?.supCode}</p>
+              <p> Sup Name: {selectedBooking?.supName}</p>
+              <p> operationType: {selectedBooking?.operationType}</p>
+              <p> Driver Name: {selectedBooking?.driverName}</p>
+              <p>Lane: {selectedBooking?.lane}</p>
+              <p> Tel: {selectedBooking?.telNo}</p>
+            </div>
+          </div>
         </Modal>
       </div>
     </div>

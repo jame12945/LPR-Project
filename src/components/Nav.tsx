@@ -4,7 +4,9 @@ import { NavBar } from '../styles/styledElements'
 import { FaTimes } from 'react-icons/fa'
 
 function Navbar() {
-  const [displayText, setDisplayText] = useState('Gate Pass')
+  const [displayText, setDisplayText] = useState(
+    'Gate Pass (License Plate Recognition)'
+  )
 
   return (
     <>
@@ -34,12 +36,19 @@ function Navbar() {
               LPR
             </Link>
             <Link
-              to="/"
-              onClick={() => setDisplayText('Gate Pass ')}
+              to="/close"
+              onClick={() => setDisplayText('Gate Pass')}
               className="text-white ml-10 text-3xl  active:text-blue"
             >
               <FaTimes />
             </Link>
+            <Link
+              to="/"
+              onClick={() =>
+                setDisplayText('Gate Pass (License Plate Recognition)')
+              }
+              className="text-white ml-10 text-3xl  active:text-blue"
+            />
           </li>
         </ul>
       </div>

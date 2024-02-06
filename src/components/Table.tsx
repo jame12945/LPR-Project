@@ -204,14 +204,14 @@ function TableDynamic() {
       >
         <div className="grid grid-flow-col justify-stretch">
           <div>
-            <p>Booking Id: {selectedBooking?.id}</p>
+            <p>Booking Id: {selectedBooking?.bookingId}</p>
             <p>
               Booking Date:{' '}
               {dayjs(selectedBooking?.bookingDate).format('YYYY-MM-DD')}
             </p>
             <p>Booking Start: {selectedBooking?.bookingStart}</p>{' '}
             <p>Booking End: {selectedBooking?.bookingEnd}</p>
-            <p>TruckLicensePlate: {selectedBooking?.truckLicensePlate}</p>
+            <p>TruckLicensePlate: {selectedBooking?.licensePlate}</p>
             <p>Warehouse Code: {selectedBooking?.warehouseCode}</p>
             <p>Truck Type: {selectedBooking?.truckType}</p>
           </div>
@@ -222,7 +222,6 @@ function TableDynamic() {
             <p> Sup Name: {selectedBooking?.supName}</p>
             <p> operationType: {selectedBooking?.operationType}</p>
             <p> Driver Name: {selectedBooking?.driverName}</p>
-            <p>Lane: {selectedBooking?.len}</p>
             <p> Tel: {selectedBooking?.telNo}</p>
           </div>
         </div>
