@@ -39,8 +39,6 @@ export interface MenuClickParams {
   fullImage: string
 }
 export const WebSocket = () => {
-  const [dataSource, setDataSource] = useState([])
-  const [dataSourceNewTable, setDataSourceNewTable] = useState([])
   const [selectedId, setSelectedId] = useState('')
   const [licensePlate, setlicensePlate] = useState('')
   const [lane, setLane] = useState(['1', '2', '3'])
@@ -49,6 +47,8 @@ export const WebSocket = () => {
   const [receive, setReceive] = useState([])
   const [isOfficer, setIsOfficer] = useState([])
   const [matchItems, setMatchItems] = useState([])
+  const [isBooking, setIsBooking] = useState(false)
+
   const [isHandleRecieveLprCalled, setIsHandleRecieveLprCalled] =
     useState(false)
   const [allLane, setAllLane] = useState({
@@ -123,25 +123,21 @@ export const WebSocket = () => {
     console.log('Receive data')
     console.log(data)
     setMatchItems(data)
-    const updatedData = data.map((item) => ({
-      ...item,
-      bookingStart: item.bookingStart || '',
-      bookingEnd: item.bookingEnd || '',
-    }))
-    setDataSourceNewTable(updatedData)
     let hasBookingData = false
     if (data.length > 0) {
       data.forEach((item) => {
         if (item.bookingId) {
           console.log('data coming')
-          setDataSource(data)
-          hasBookingData = true
+          setMatchItems(data)
+          setIsBooking(true)
+          hasBookingData = false
         } else if (item?.resultMessage) {
           console.log('no booking data')
           setIsOfficer(data)
+          hasBookingData = true
         }
       })
-      if (hasBookingData === false) {
+      if (hasBookingData === true) {
         toast.success('ตรวจพบเป็นรถภายในองค์กร ระบบกำลังเปิดไม้กั้น')
         return
       }
@@ -258,21 +254,25 @@ export const WebSocket = () => {
       dataIndex: 'manage',
       key: 'manage',
       render: (_, record) => (
-        <Dropdown
-          overlay={
-            <Menu onClick={(e) => handleMenuClick(e, record)}>
-              <Menu.Item key="CheckIn">CheckIn</Menu.Item>
-              <Menu.Item key="OpenGate">OpenGate</Menu.Item>
-            </Menu>
-          }
-        >
-          <Button className="bg-sky flex">
-            <span>Action</span>
-            <div className="flex items-center justify-center ml-2 mt-1.5 ">
-              <IoChevronDownOutline />
-            </div>
-          </Button>
-        </Dropdown>
+        <>
+          {isBooking && record.bookingId && (
+            <Dropdown
+              overlay={
+                <Menu onClick={(e) => handleMenuClick(e, record)}>
+                  <Menu.Item key="CheckIn">CheckIn</Menu.Item>
+                  <Menu.Item key="OpenGate">OpenGate</Menu.Item>
+                </Menu>
+              }
+            >
+              <Button className="bg-sky flex">
+                <span>Action</span>
+                <div className="flex items-center justify-center ml-2 mt-1.5 ">
+                  <IoChevronDownOutline />
+                </div>
+              </Button>
+            </Dropdown>
+          )}
+        </>
       ),
     },
   ]
@@ -334,11 +334,6 @@ export const WebSocket = () => {
     }
   }
 
-  // const handleOfficer = () => {
-  //   console.log('IsOfficer...')
-  //   console.log(isOfficer)
-  //   toast.success('ระบบกำลังเปิดไม้กั้น')
-  // }
   const handleModalCancel = () => {
     setModalVisible(false)
   }
@@ -353,8 +348,6 @@ export const WebSocket = () => {
       console.log(`Checking in successfully for booking of ${bookingId}`)
       console.log('Response:', response)
     } catch (error) {
-      // toast.error('Fetch Data Error !!!')
-      //อาจจะให้กรอกข้อมูลใหม่
       console.log('Input Not Correct')
     }
     setModalVisible(false)
@@ -362,6 +355,14 @@ export const WebSocket = () => {
   return (
     <div>
       <div>
+        <div className="flex pl-8 pb-4 pt-2 text-xl text-white">
+          <p>รายการจองรถขาเข้า</p>
+          <div className="pl-14">Date: {dayjs().format('YYYY-MM-DD')}</div>
+          <div className="pl-4">
+            {' '}
+            Time: {dayjs().add(0, 'minute').format('HH:mm')}
+          </div>
+        </div>
         <ToastContainer />
         <Table columns={testColumns} dataSource={receive} />
         <Modal
