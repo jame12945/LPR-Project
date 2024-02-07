@@ -1,12 +1,27 @@
 import { useContext, useEffect, useState } from 'react'
 import { WebSocketContext } from '../contexts/WebsocketContext'
-import { Table, Menu, Dropdown, Button, Input, Modal, Spin } from 'antd'
+import {
+  Table,
+  Menu,
+  Dropdown,
+  Button,
+  Input,
+  Modal,
+  Spin,
+  Image,
+  Divider,
+  notification,
+  Space,
+} from 'antd'
 import dayjs from 'dayjs'
 import { IoChevronDownOutline } from 'react-icons/io5'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import { BookingSocketData } from '../type/booking'
 import { ColumnsType } from 'antd/es/table'
+import type { NotificationArgsProps } from 'antd'
+
+type NotificationPlacement = NotificationArgsProps['placement']
 
 export interface BookingType {
   lane: string
@@ -18,6 +33,7 @@ export interface BookingType {
   bookingDate: string
   bookingStart: string
   bookingEnd: string
+  node_name: string
 }
 export interface ReceiveData {
   full_image: string
@@ -38,6 +54,7 @@ export interface ReceiveData {
   driverName: string
   lane: string
   telNo: string
+  node_name: string
 }
 
 export interface MenuClickParams {
@@ -68,9 +85,11 @@ export const WebSocket = () => {
     lane3: '3',
     lane4: '4',
     lane5: '5',
+    lane6: '6',
   })
   const [modalVisible, setModalVisible] = useState(false)
   const [modalBookingVisible, setModalBookingVisible] = useState(false)
+  const [api, contextHolder] = notification.useNotification()
   const [inputdata, setInputData] = useState({
     license_plate_number: '',
     lane: '',
@@ -134,6 +153,8 @@ export const WebSocket = () => {
         operationType: matchingDatas ? matchingDatas.operationType : '',
         driverName: matchingDatas ? matchingDatas.driverName : '',
         telNo: matchingDatas ? matchingDatas.telNo : '',
+        truckType: matchingDatas ? matchingDatas.truckType : '',
+        node_name: matchingDatas ? matchingDatas.node_name : '',
       }
     })
     setReceive(updatedReceive)
@@ -142,7 +163,7 @@ export const WebSocket = () => {
   const handleRecieveLpr = (data: BookingSocketData[]) => {
     console.log('Receive data')
     console.log(data)
-    setMatchItems(data)
+    // setMatchItems(data)
     let hasBookingData = false
     if (data.length > 0) {
       data.forEach((item) => {
@@ -155,6 +176,16 @@ export const WebSocket = () => {
           console.log('no booking data')
           setIsOfficer(data)
           hasBookingData = true
+        } else if (
+          item?.licensePlate &&
+          item?.node_name &&
+          item?.lane &&
+          item?.plate_image &&
+          item?.full_image
+        ) {
+          console.log('Hello Unregistered Car')
+          setMatchItems(data)
+          openNotification('top')
         }
       })
       if (hasBookingData === true) {
@@ -162,10 +193,12 @@ export const WebSocket = () => {
         return
       }
     } else {
+      //fix here
       console.log('no response data coming!!!!')
       setModalVisible(true)
     }
   }
+
   const testColumns: ColumnsType<BookingType> = [
     {
       title: 'Lane',
@@ -179,10 +212,11 @@ export const WebSocket = () => {
       render: (text, record) => (
         <>
           {text && (
-            <img
+            <Image
               src={record.full_image}
               alt="Monitor Read fullImage"
-              className="w-20 h-18"
+              width={90}
+              height={80}
             />
           )}
         </>
@@ -195,10 +229,11 @@ export const WebSocket = () => {
       render: (text, record) => (
         <>
           {text && (
-            <img
+            <Image
               src={record.plate_image}
               alt="Monitor Read plateImage"
-              className="w-20 h-18"
+              width={80}
+              height={60}
             />
           )}
         </>
@@ -290,12 +325,13 @@ export const WebSocket = () => {
       key: 'manage',
       render: (_, record) => (
         <>
-          {isBooking && record.bookingId && (
+          {isBooking && record.bookingId && record.bookingStart && (
             <Dropdown
               overlay={
                 <Menu onClick={(e) => handleMenuClick(e, record)}>
                   <Menu.Item key="CheckIn">CheckIn</Menu.Item>
                   <Menu.Item key="OpenGate">OpenGate</Menu.Item>
+                  <Menu.Item key="Reject">Reject</Menu.Item>
                 </Menu>
               }
             >
@@ -307,11 +343,39 @@ export const WebSocket = () => {
               </Button>
             </Dropdown>
           )}
+          {!record.bookingId && record.lane && record.full_image && (
+            <Dropdown
+              overlay={
+                <Menu onClick={(e) => handleMenuClick(e, record)}>
+                  <Menu.Item key="OpenGate">OpenGate</Menu.Item>
+                  <Menu.Item key="FillData">FillData</Menu.Item>
+                  <Menu.Item key="Reject">Reject</Menu.Item>
+                </Menu>
+              }
+            >
+              <Button className="bg-sky flex">
+                <span>Action</span>
+                <div className="flex items-center justify-center ml-2 mt-1.5">
+                  <IoChevronDownOutline />
+                </div>
+              </Button>
+            </Dropdown>
+          )}
         </>
       ),
     },
   ]
-  //do here
+  const openNotification = (placement: NotificationPlacement) => {
+    api.info({
+      message: 'Booking Not Found',
+      description: (
+        <div>
+          กรุณาให้ รปภ.เป็นผู้ทำการอนุญาติ <br /> เพื่อให้รถผ่านเข้าไปข้างใน
+        </div>
+      ),
+      placement,
+    })
+  }
 
   const handleMenuClick = async (e: any, record: MenuClickParams) => {
     if (e.key === 'CheckIn') {
@@ -356,6 +420,8 @@ export const WebSocket = () => {
         console.error('CheckIn Error: ', error)
         toast.error('Check-in failed!')
       }
+    } else if (e.key === 'FillData') {
+      setModalVisible(true)
     } else {
       const { bookingId } = record
       setSelectedId(bookingId)
@@ -466,6 +532,7 @@ export const WebSocket = () => {
             </div>
           </div>
         </Modal>
+        {contextHolder}
       </div>
     </div>
   )

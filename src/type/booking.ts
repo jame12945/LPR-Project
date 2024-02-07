@@ -1,6 +1,7 @@
 export interface BookingSocketData {
   bookingId?: string
   licensePlate?: string | null
+  license_plate_number?: string | null
   bookingDate?: string | null
   bookingStart?: string | null
   bookingEnd?: string | null
