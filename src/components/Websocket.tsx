@@ -34,6 +34,7 @@ export interface BookingType {
   bookingStart: string
   bookingEnd: string
   node_name: string
+  resultMessage: string
 }
 export interface ReceiveData {
   full_image: string
@@ -55,6 +56,7 @@ export interface ReceiveData {
   lane: string
   telNo: string
   node_name: string
+  resultMessage: string
 }
 
 export interface MenuClickParams {
@@ -68,6 +70,7 @@ export const WebSocket = () => {
   const [selectedId, setSelectedId] = useState('')
   const [licensePlate, setlicensePlate] = useState('')
   const [lane, setLane] = useState([])
+  const [eachLane, setEachLane] = useState('')
   const [plateImage, setPlateImage] = useState('')
   const [fullImage, setFullImage] = useState('')
   const [receive, setReceive] = useState([])
@@ -98,6 +101,7 @@ export const WebSocket = () => {
   const socket = useContext(WebSocketContext)
 
   useEffect(() => {
+    let isDataReceived = false
     const fetchData = async () => {
       try {
         socket.on('connect', () => {
@@ -108,6 +112,7 @@ export const WebSocket = () => {
           if (!isHandleRecieveLprCalled) {
             handleRecieveLpr(data)
             setIsHandleRecieveLprCalled(true)
+            isDataReceived = true
           }
         })
       } catch (error) {
@@ -120,8 +125,13 @@ export const WebSocket = () => {
       setIsHandleRecieveLprCalled(false)
     }
     fetchData()
-    clearMatchItem()
-    const interval = setInterval(clearMatchItem, 30000)
+    const cleanup = () => {
+      if (!isDataReceived) {
+        clearMatchItem()
+      }
+    }
+
+    const interval = setInterval(cleanup, 30000)
     return () => {
       console.log('Unregistered Event!!')
       socket.off('connect')
@@ -155,6 +165,7 @@ export const WebSocket = () => {
         telNo: matchingDatas ? matchingDatas.telNo : '',
         truckType: matchingDatas ? matchingDatas.truckType : '',
         node_name: matchingDatas ? matchingDatas.node_name : '',
+        resultMessage: matchingDatas ? matchingDatas.resultMessage : '',
       }
     })
     setReceive(updatedReceive)
@@ -163,7 +174,7 @@ export const WebSocket = () => {
   const handleRecieveLpr = (data: BookingSocketData[]) => {
     console.log('Receive data')
     console.log(data)
-    // setMatchItems(data)
+
     let hasBookingData = false
     if (data.length > 0) {
       data.forEach((item) => {
@@ -171,10 +182,13 @@ export const WebSocket = () => {
           console.log('data coming')
           setMatchItems(data)
           setIsBooking(true)
+
           hasBookingData = false
         } else if (item?.resultMessage) {
+          //do heres
           console.log('no booking data')
-          setIsOfficer(data)
+          setMatchItems(data)
+
           hasBookingData = true
         } else if (
           item?.licensePlate &&
@@ -184,6 +198,12 @@ export const WebSocket = () => {
           item?.full_image
         ) {
           console.log('Hello Unregistered Car')
+          const saveLane = data[0].lane
+          const saveFullImage = data[0].full_image
+          const savePlateImage = data[0].plate_image
+          setEachLane(saveLane)
+          setPlateImage(savePlateImage)
+          setFullImage(saveFullImage)
           setMatchItems(data)
           openNotification('top')
         }
@@ -325,42 +345,49 @@ export const WebSocket = () => {
       key: 'manage',
       render: (_, record) => (
         <>
-          {isBooking && record.bookingId && record.bookingStart && (
-            <Dropdown
-              overlay={
-                <Menu onClick={(e) => handleMenuClick(e, record)}>
-                  <Menu.Item key="CheckIn">CheckIn</Menu.Item>
-                  <Menu.Item key="OpenGate">OpenGate</Menu.Item>
-                  <Menu.Item key="Reject">Reject</Menu.Item>
-                </Menu>
-              }
-            >
-              <Button className="bg-sky flex">
-                <span>Action</span>
-                <div className="flex items-center justify-center ml-2 mt-1.5 ">
-                  <IoChevronDownOutline />
-                </div>
-              </Button>
-            </Dropdown>
-          )}
-          {!record.bookingId && record.lane && record.full_image && (
-            <Dropdown
-              overlay={
-                <Menu onClick={(e) => handleMenuClick(e, record)}>
-                  <Menu.Item key="OpenGate">OpenGate</Menu.Item>
-                  <Menu.Item key="FillData">FillData</Menu.Item>
-                  <Menu.Item key="Reject">Reject</Menu.Item>
-                </Menu>
-              }
-            >
-              <Button className="bg-sky flex">
-                <span>Action</span>
-                <div className="flex items-center justify-center ml-2 mt-1.5">
-                  <IoChevronDownOutline />
-                </div>
-              </Button>
-            </Dropdown>
-          )}
+          {isBooking &&
+            record.bookingId &&
+            record.bookingStart &&
+            !record.resultMessage &&
+            record.status != 'success' && (
+              <Dropdown
+                overlay={
+                  <Menu onClick={(e) => handleMenuClick(e, record)}>
+                    <Menu.Item key="CheckIn">CheckIn</Menu.Item>
+                    <Menu.Item key="OpenGate">OpenGate</Menu.Item>
+                    <Menu.Item key="Reject">Reject</Menu.Item>
+                  </Menu>
+                }
+              >
+                <Button className="bg-sky flex">
+                  <span>Action</span>
+                  <div className="flex items-center justify-center ml-2 mt-1.5 ">
+                    <IoChevronDownOutline />
+                  </div>
+                </Button>
+              </Dropdown>
+            )}
+          {!record.bookingId &&
+            record.lane &&
+            record.full_image &&
+            !record.resultMessage && (
+              <Dropdown
+                overlay={
+                  <Menu onClick={(e) => handleMenuClick(e, record)}>
+                    <Menu.Item key="OpenGate">OpenGate</Menu.Item>
+                    <Menu.Item key="FillData">FillData</Menu.Item>
+                    <Menu.Item key="Reject">Reject</Menu.Item>
+                  </Menu>
+                }
+              >
+                <Button className="bg-sky flex">
+                  <span>Action</span>
+                  <div className="flex items-center justify-center ml-2 mt-1.5">
+                    <IoChevronDownOutline />
+                  </div>
+                </Button>
+              </Dropdown>
+            )}
         </>
       ),
     },
@@ -380,11 +407,7 @@ export const WebSocket = () => {
   const handleMenuClick = async (e: any, record: MenuClickParams) => {
     if (e.key === 'CheckIn') {
       const { e, bookingId, licensePlate, lane, plateImage, fullImage } = record
-      setSelectedId(bookingId)
-      setlicensePlate(licensePlate)
-      setLane(lane)
-      setPlateImage(plateImage)
-      setFullImage(fullImage)
+
       try {
         const response = await axios.post(
           'http://localhost:3000/recieve/manual-checkin',
@@ -443,11 +466,13 @@ export const WebSocket = () => {
   }
   const handleModalOk = async () => {
     console.log('License Plate Number', inputdata.license_plate_number)
-    console.log('Lane', inputdata.lane)
+    console.log('Lane', eachLane)
     try {
       const response = await axios.post('http://localhost:3000/recieve', {
         license_plate_number: inputdata.license_plate_number,
-        lane: inputdata.lane,
+        lane: eachLane,
+        plate_image: plateImage,
+        full_image: fullImage,
       })
       console.log(`Checking in successfully for booking of ${bookingId}`)
       console.log('Response:', response)
@@ -464,14 +489,6 @@ export const WebSocket = () => {
   return (
     <div>
       <div>
-        <div className="flex pl-8 pb-4 pt-2 text-xl text-white">
-          <p>รายการจองรถขาเข้า</p>
-          <div className="pl-14">Date: {dayjs().format('YYYY-MM-DD')}</div>
-          <div className="pl-4">
-            {' '}
-            Time: {dayjs().add(0, 'minute').format('HH:mm')}
-          </div>
-        </div>
         <ToastContainer />
         <Table columns={testColumns} dataSource={receive} />
         <Modal
@@ -487,17 +504,6 @@ export const WebSocket = () => {
               setInputData({
                 ...inputdata,
                 license_plate_number: e.target.value,
-              })
-            }
-          />
-          <Input
-            className="mt-2"
-            placeholder="Enter Lane"
-            value={inputdata.lane}
-            onChange={(e) =>
-              setInputData({
-                ...inputdata,
-                lane: e.target.value,
               })
             }
           />
