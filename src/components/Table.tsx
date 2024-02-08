@@ -8,14 +8,38 @@ import 'react-toastify/dist/ReactToastify.css'
 import { IoChevronDownOutline } from 'react-icons/io5'
 import { Modal, Input, Space } from 'antd'
 import type { SearchProps } from 'antd/es/input/Search'
+import Timer from './Timer'
 
-//เปลี่ยนสี table ให้เป็น sky
+export interface ReceiveData {
+  full_image: string
+  plate_image: string
+  licensePlate: string
+  booking: string
+  bookingId: string
+  status: string
+  bookingDate: string
+  bookingStart: string
+  bookingEnd: string
+  warehouseCode: string
+  truckType: string
+  companyCode: string
+  supCode: string
+  supName: string
+  operationType: string
+  driverName: string
+  lane: string
+  telNo: string
+  node_name: string
+  resultMessage: string
+}
 
 function TableDynamic() {
   const [dataSource, setDataSource] = useState([])
   const [selectedId, setSelectedId] = useState('')
   const [modalVisible, setModalVisible] = useState(false)
-  const [selectedBooking, setSelectedBooking] = useState(null)
+  const [selectedBooking, setSelectedBooking] = useState<ReceiveData | null>(
+    null
+  )
   const [responseData, setResponseData] = useState(null)
   const { Search } = Input
 
@@ -99,6 +123,7 @@ function TableDynamic() {
             <Menu onClick={(e) => handleMenuClick(e, record.bookingId)}>
               <Menu.Item key="CheckIn">CheckIn</Menu.Item>
               <Menu.Item key="OpenGate">OpenGate</Menu.Item>
+              <Menu.Item key="Reject">Reject</Menu.Item>
             </Menu>
           }
         >
@@ -143,6 +168,8 @@ function TableDynamic() {
         console.error('CheckIn Error: ', error)
         toast.error('Check-in failed!')
       }
+    } else if (e.key === 'Reject') {
+      console.log('Reject')
     } else {
       setSelectedId(bookingId)
 
@@ -177,55 +204,62 @@ function TableDynamic() {
 
   return (
     <>
-      <div className="flex justify-between pb-4 text-white pl-8 pt-2 placeholder text-xl ">
-        <div className="flex">
-          <p className=" text-xl">จำนวนการจองทั้งหมดภายในวันนี้</p>
-          <div className="pl-14"> Date:{dayjs().format('YYYY-MM-DD')}</div>
-          <div className="pl-4">
-            {' '}
-            Time:{dayjs().add(0, 'minute').format('HH:mm')}
+      <div className="px-4">
+        <div className="flex justify-between pb-4 text-white  pt-2 placeholder text-xl ">
+          <div className=" items-start">
+            <Timer />
           </div>
-        </div>
 
-        <Search
-          placeholder="Input Car Registration"
-          enterButton
-          onSearch={onSearch}
-          className="w-80 flex items-end"
-        ></Search>
+          <Search
+            placeholder="Input Car Registration"
+            enterButton
+            onSearch={onSearch}
+            className="w-80 flex items-end mb-2.5"
+          ></Search>
+        </div>
+        <Table columns={cols} dataSource={dataSource} />
+        <ToastContainer />
+        <Modal
+          title={`Booking Details : ${selectedBooking?.bookingId}`}
+          visible={modalVisible}
+          onCancel={handleModalCancel}
+          footer={null}
+        >
+          <div className="grid grid-flow-col justify-stretch">
+            <div>
+              <p>Booking Date:</p>
+              <p>Booking Start:</p>
+              <p>Booking End:</p>
+              <p>Plate Number:</p>
+              <p>Warehouse Code:</p>
+              <p>Truck Type:</p>
+              <p> Company Code:</p>
+              <p> Sup Code:</p>
+              <p> Sup Name:</p>
+              <p> Operation Type:</p>
+              <p> Driver Name:</p>
+              <p> Tel:</p>
+            </div>
+
+            <div className="pl-10">
+              <div>
+                {dayjs(selectedBooking?.bookingDate).format('YYYY-MM-DD')}
+              </div>
+              <div>{selectedBooking?.bookingStart}</div>
+              <div>{selectedBooking?.bookingEnd}</div>
+              <div>{selectedBooking?.licensePlate}</div>
+              <div>{selectedBooking?.warehouseCode}</div>
+              <div>{selectedBooking?.truckType}</div>
+              <div>{selectedBooking?.companyCode}</div>
+              <div>{selectedBooking?.supCode}</div>
+              <div>{selectedBooking?.supName}</div>
+              <div>{selectedBooking?.operationType}</div>
+              <div>{selectedBooking?.driverName}</div>
+              <div>{selectedBooking?.telNo}</div>
+            </div>
+          </div>
+        </Modal>
       </div>
-      <Table columns={cols} dataSource={dataSource} />
-      <ToastContainer />
-      <Modal
-        title={`Booking Details : ${selectedBooking?.id}`}
-        visible={modalVisible}
-        onCancel={handleModalCancel}
-        footer={null}
-      >
-        <div className="grid grid-flow-col justify-stretch">
-          <div>
-            <p>Booking Id: {selectedBooking?.bookingId}</p>
-            <p>
-              Booking Date:{' '}
-              {dayjs(selectedBooking?.bookingDate).format('YYYY-MM-DD')}
-            </p>
-            <p>Booking Start: {selectedBooking?.bookingStart}</p>{' '}
-            <p>Booking End: {selectedBooking?.bookingEnd}</p>
-            <p>TruckLicensePlate: {selectedBooking?.licensePlate}</p>
-            <p>Warehouse Code: {selectedBooking?.warehouseCode}</p>
-            <p>Truck Type: {selectedBooking?.truckType}</p>
-          </div>
-
-          <div>
-            <p> Company Code: {selectedBooking?.companyCode}</p>
-            <p> Sup Code: {selectedBooking?.supCode}</p>
-            <p> Sup Name: {selectedBooking?.supName}</p>
-            <p> operationType: {selectedBooking?.operationType}</p>
-            <p> Driver Name: {selectedBooking?.driverName}</p>
-            <p> Tel: {selectedBooking?.telNo}</p>
-          </div>
-        </div>
-      </Modal>
     </>
   )
 }

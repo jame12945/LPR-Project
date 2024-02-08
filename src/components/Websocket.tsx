@@ -20,6 +20,7 @@ import { ToastContainer, toast } from 'react-toastify'
 import { BookingSocketData } from '../type/booking'
 import { ColumnsType } from 'antd/es/table'
 import type { NotificationArgsProps } from 'antd'
+import Timer from './Timer'
 
 type NotificationPlacement = NotificationArgsProps['placement']
 
@@ -487,8 +488,9 @@ export const WebSocket = () => {
     setModalBookingVisible(true)
   }
   return (
-    <div>
+    <div className="px-4">
       <div>
+        <Timer />
         <ToastContainer />
         <Table columns={testColumns} dataSource={receive} />
         <Modal
@@ -514,27 +516,38 @@ export const WebSocket = () => {
           onCancel={handleModalBookingCancle}
           footer={null}
         >
-          <div className=" grid grid-flow-col justify-stretch">
+          {' '}
+          <div className="grid grid-flow-col justify-stretch">
             <div>
-              <p>Booking Id: {selectedBooking?.bookingId}</p>
-              <p>
-                Booking Date:{' '}
-                {dayjs(selectedBooking?.bookingDate).format('YYYY-MM-DD')}
-              </p>
-              <p>Booking Start:{selectedBooking?.bookingStart}</p>
-              <p>Booking End: {selectedBooking?.bookingEnd}</p>
-              <p>TruckLicensePlate: {selectedBooking?.licensePlate}</p>
-              <p>Warehouse Code: {selectedBooking?.warehouseCode}</p>
-              <p>Truck Type: {selectedBooking?.truckType}</p>
+              <p>Booking Date:</p>
+              <p>Booking Start:</p>
+              <p>Booking End:</p>
+              <p>Plate Number:</p>
+              <p>Warehouse Code:</p>
+              <p>Truck Type:</p>
+              <p> Company Code:</p>
+              <p> Sup Code:</p>
+              <p> Sup Name:</p>
+              <p> Operation Type:</p>
+              <p> Driver Name:</p>
+              <p> Tel:</p>
             </div>
-            <div>
-              <p> Company Code: {selectedBooking?.companyCode}</p>
-              <p> Sup Code: {selectedBooking?.supCode}</p>
-              <p> Sup Name: {selectedBooking?.supName}</p>
-              <p> operationType: {selectedBooking?.operationType}</p>
-              <p> Driver Name: {selectedBooking?.driverName}</p>
-              <p>Lane: {selectedBooking?.lane}</p>
-              <p> Tel: {selectedBooking?.telNo}</p>
+
+            <div className="pl-10">
+              <div>
+                {dayjs(selectedBooking?.bookingDate).format('YYYY-MM-DD')}
+              </div>
+              <div>{selectedBooking?.bookingStart}</div>
+              <div>{selectedBooking?.bookingEnd}</div>
+              <div>{selectedBooking?.licensePlate}</div>
+              <div>{selectedBooking?.warehouseCode}</div>
+              <div>{selectedBooking?.truckType}</div>
+              <div>{selectedBooking?.companyCode}</div>
+              <div>{selectedBooking?.supCode}</div>
+              <div>{selectedBooking?.supName}</div>
+              <div>{selectedBooking?.operationType}</div>
+              <div>{selectedBooking?.driverName}</div>
+              <div>{selectedBooking?.telNo}</div>
             </div>
           </div>
         </Modal>
