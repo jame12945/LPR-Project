@@ -332,8 +332,8 @@ export const WebSocket = () => {
             <div>
               <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
               <div className="text-green">
-                ({dayjs(record.bookingStart, 'HH:mm:ss').format('HH:mm')} -{' '}
-                {dayjs(record.bookingEnd, 'HH:mm:ss').format('HH:mm')})
+                ( {record.bookingStart.substring(0, 5)} -{' '}
+                {record.bookingEnd.substring(0, 5)})
               </div>
             </div>
           )}
@@ -487,6 +487,7 @@ export const WebSocket = () => {
     setSelectedBooking(record)
     setModalBookingVisible(true)
   }
+
   return (
     <div className="px-4">
       <div>

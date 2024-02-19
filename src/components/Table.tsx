@@ -47,7 +47,7 @@ function TableDynamic() {
     const fetchData = async () => {
       try {
         const response = await axios.post(
-          'http://192.168.1.101:3000/booking-fe/filter',
+          'http://192.168.1.5:3000/booking-fe/filter',
           {}
         )
         console.log(response)
@@ -81,15 +81,18 @@ function TableDynamic() {
     {
       title: 'Appointment Date',
       dataIndex: 'bookingDate',
-      render: (text, record) => (
-        <div>
-          <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
-          <div className=" text-green">
-            ( {dayjs(record.bookingStart, 'HH:mm:ss').format('HH:mm')} -{' '}
-            {dayjs(record.bookingEnd, 'HH:mm:ss').format('HH:mm')} )
+      render: (text, record) => {
+        console.log(record.bookingStart, record.bookingEnd)
+        return (
+          <div>
+            <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
+            <div className=" text-green">
+              ( {record.bookingStart.substring(0, 5)} -{' '}
+              {record.bookingEnd.substring(0, 5)})
+            </div>
           </div>
-        </div>
-      ),
+        )
+      },
     },
     {
       title: 'Car Registration',
@@ -136,17 +139,6 @@ function TableDynamic() {
         </Dropdown>
       ),
     },
-    // {
-    //   title: 'Image',
-    //   dataIndex:
-    //     'https://plus.unsplash.com/premium_photo-1666787742869-54bd5c564d47?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    //   render: () => (
-    //     <img
-    //       className="w-10 h-10"
-    //       src={`https://plus.unsplash.com/premium_photo-1666787742869-54bd5c564d47?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D`}
-    //     />
-    //   ),
-    // },
   ]
 
   const handleMenuClick = async (e, bookingId) => {
