@@ -31,8 +31,14 @@ export interface ReceiveData {
   telNo: string
   node_name: string
   resultMessage: string
+  id: Number
 }
 
+export interface MenuClickParams {
+  bookingId: String
+  id: Number
+  licensePlate: String
+}
 function TableDynamic() {
   const [dataSource, setDataSource] = useState([])
   const [selectedId, setSelectedId] = useState('')
@@ -47,7 +53,7 @@ function TableDynamic() {
     const fetchData = async () => {
       try {
         const response = await axios.post(
-          'http://192.168.1.5:3000/booking-fe/filter',
+          'http://10.84.235.10:3000/bookings/filter',
           {}
         )
         console.log(response)
@@ -69,6 +75,10 @@ function TableDynamic() {
   }, [])
   const cols = [
     {
+      title: 'Id',
+      dataIndex: 'id',
+    },
+    {
       title: 'Type',
       dataIndex: 'truckType',
       render: (text) => (
@@ -82,18 +92,21 @@ function TableDynamic() {
       title: 'Appointment Date',
       dataIndex: 'bookingDate',
       render: (text, record) => {
-        console.log(record.bookingStart, record.bookingEnd)
+        const start = record.bookingStart
+          ? record.bookingStart.substring(0, 5)
+          : ''
+        const end = record.bookingEnd ? record.bookingEnd.substring(0, 5) : ''
         return (
           <div>
             <div className="ml-2">{dayjs(text).format('YYYY-MM-DD')}</div>
-            <div className=" text-green">
-              ( {record.bookingStart.substring(0, 5)} -{' '}
-              {record.bookingEnd.substring(0, 5)})
+            <div className="text-green">
+              ({start} - {end})
             </div>
           </div>
         )
       },
     },
+
     {
       title: 'Car Registration',
       dataIndex: 'licensePlate',
@@ -117,38 +130,43 @@ function TableDynamic() {
         </>
       ),
     },
-    {
-      title: 'Manage',
-      dataIndex: 'manage',
-      render: (_, record) => (
-        <Dropdown
-          overlay={
-            <Menu onClick={(e) => handleMenuClick(e, record.bookingId)}>
-              <Menu.Item key="CheckIn">CheckIn</Menu.Item>
-              <Menu.Item key="OpenGate">OpenGate</Menu.Item>
-              <Menu.Item key="Reject">Reject</Menu.Item>
-            </Menu>
-          }
-        >
-          <Button className="bg-sky flex">
-            <span>Action</span>
-            <div className="flex items-center justify-center ml-2 mt-1.5 ">
-              <IoChevronDownOutline />
-            </div>
-          </Button>
-        </Dropdown>
-      ),
-    },
+    // {
+    //   title: 'Manage',
+    //   dataIndex: 'manage',
+    //   render: (_, record) => (
+    //     <Dropdown
+    //       overlay={
+    //         <Menu onClick={(e) => handleMenuClick(e, record)}>
+    //           <Menu.Item key="CheckIn">CheckIn</Menu.Item>
+    //           {/* <Menu.Item key="OpenGate">OpenGate</Menu.Item> */}
+    //           <Menu.Item key="Reject">Reject</Menu.Item>
+    //         </Menu>
+    //       }
+    //     >
+    //       <Button className="bg-sky flex">
+    //         <span>Action</span>
+    //         <div className="flex items-center justify-center ml-2 mt-1.5 ">
+    //           <IoChevronDownOutline />
+    //         </div>
+    //       </Button>
+    //     </Dropdown>
+    //   ),
+    // },
   ]
 
-  const handleMenuClick = async (e, bookingId) => {
+  const handleMenuClick = async (e: any, record: MenuClickParams) => {
     if (e.key === 'CheckIn') {
+      const { e, bookingId, licensePlate, id } = record
       setSelectedId(bookingId)
 
       try {
         const response = await axios.post(
-          'http://localhost:3000/booking-fe/check-in',
-          { idSelected: bookingId }
+          'http://10.84.235.10:3000/bookings/check-in',
+          {
+            bookingId: bookingId,
+            licensePlate: licensePlate,
+            id: id,
+          }
         )
 
         console.log(`Checking in successfully for booking of ${bookingId}`)
@@ -162,6 +180,23 @@ function TableDynamic() {
       }
     } else if (e.key === 'Reject') {
       console.log('Reject')
+      const { e, bookingId, licensePlate, id } = record
+      try {
+        const response = await axios.post(
+          'http://10.84.235.10:3000/bookings/reject',
+          {
+            bookingId: bookingId,
+            licensePlate: licensePlate,
+            id: id,
+          }
+        )
+        console.log('Reject Succcess')
+        console.log('Response:', response.data)
+        toast.success('ระบบทำการ Reject เรียบร้อย ')
+      } catch (error) {
+        console.error('CheckIn Error: ', error)
+        toast.error('Check-in failed!')
+      }
     } else {
       setSelectedId(bookingId)
 
@@ -185,7 +220,7 @@ function TableDynamic() {
   const onSearch: SearchProps['onSearch'] = (value, _e, info) => {
     console.log(info?.source, value)
     const filterData = responseData.filter((item) =>
-      item.licensePlate.includes(value)
+      item?.licensePlate?.includes(value)
     )
     console.log(
       'filterData................................................................'
@@ -213,7 +248,7 @@ function TableDynamic() {
         <ToastContainer />
         <Modal
           title={`Booking Details : ${selectedBooking?.bookingId}`}
-          visible={modalVisible}
+          open={modalVisible}
           onCancel={handleModalCancel}
           footer={null}
         >

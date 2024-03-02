@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { NavBar } from '../styles/styledElements'
-import { FaTimes } from 'react-icons/fa'
+import { FaTimes, FaCog } from 'react-icons/fa'
 
 function Navbar() {
   const [displayText, setDisplayText] = useState(
@@ -24,7 +24,7 @@ function Navbar() {
               onClick={() => setDisplayText('Gate Pass')}
               className="flex align-middle text-lg font-semibold text-white cursor-pointer ml-10 focus:text-blue focus:underline active:no-underline"
             >
-              List View
+              History View
             </Link>
             <Link
               to="/lpr"
@@ -34,6 +34,13 @@ function Navbar() {
               className="flex align-middle text-lg font-semibold text-white cursor-pointer ml-10 focus:text-blue focus:underline active:no-underline "
             >
               LPR
+            </Link>
+            <Link
+              to="/setting"
+              onClick={() => setDisplayText('LPR Configure Lane Set-Up')}
+              className="flex align-middle text-lg font-semibold text-white cursor-pointer ml-10 pt-2"
+            >
+              <FaCog />
             </Link>
 
             <Link
