@@ -25,7 +25,7 @@ import { BookingSocketData } from '../type/booking'
 import { ColumnsType } from 'antd/es/table'
 import type { NotificationArgsProps } from 'antd'
 import Timer from './Timer'
-
+type NotificationType = 'success' | 'info' | 'warning' | 'error'
 type NotificationPlacement = NotificationArgsProps['placement']
 
 export interface BookingType {
@@ -43,6 +43,7 @@ export interface BookingType {
   count: number
 }
 export interface ReceiveData {
+  isOpenGateError: boolean
   full_image: string
   plate_image: string
   licensePlate: string
@@ -111,11 +112,19 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const [checkResultMeassage, setCheckResultMeassage] = useState<boolean>()
   const [bookingData, setBookingData] = useState<BOOKING_LIST_TYPE[]>([])
   const [selectBookingIds, setSelectedBookingIds] = useState<string[]>([])
-  const [modalVisible, setModalVisible] = useState(false)
+  const [api, contextHolder] = notification.useNotification()
+  const [isOpenGateError, setIsOpenGateError] = useState<boolean>()
+
   const [inputdata, setInputData] = useState({
     license_plate_number: '',
     lane: '',
   })
+  const openNotificationWithIcon = (type: NotificationType) => {
+    api[type]({
+      message: 'Open Gate Error',
+      description: 'ระบบเปิดไม้กั้นเกิดขัอผิดพลาด',
+    })
+  }
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -124,15 +133,25 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
 
     socket.on('onRecieveLpr', (data: ReceiveData[]) => {
       const isCorrectLane = data.find((el) => el.lane === lane)
+
       if (isCorrectLane) {
         console.log(data)
         console.log('checkResultMeassage')
         console.log(checkResultMeassage)
+
         data.forEach((item) => {
           console.log('data resultmessage', item.resultMessage)
           setCheckResultMeassage(item.resultMessage)
+          if (item.isOpenGateError === true) {
+            console.log('data isOpenGateError', item.isOpenGateError)
+            setIsOpenGateError(item.isOpenGateError)
+            openNotificationWithIcon('error')
+          }
         })
-
+        // if (isOpenGateError === true) {
+        //   console.log('print something')
+        //   openNotificationWithIcon('error')
+        // }
         if (data.length > 1) setIsError(true)
 
         const bookingData = data.map((el) => ({
@@ -252,49 +271,70 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     }
   }
   return (
-    <div className=" bg-grey rounded-md">
-      <div className="grid grid-cols-8 mb-0 p-2 gap-1  ">
-        <div className="bg-white rounded-md  flex items-center justify-center">
-          {lane_name}
-        </div>
-        <div className="bg-white rounded-md flex items-center justify-center ">
-          {data?.plate_image ? (
-            <Image
-              src={data.plate_image}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <Image
-              src="https://ozekirobot.com/attachments/6144/Lead_image.png"
-              className="h-full w-full object-cover"
-            />
-          )}
-        </div>
+    <>
+      {contextHolder}
 
-        <div className="bg-white rounded-md flex items-center justify-center">
-          {data?.full_image ? (
-            <Image
-              src={data.full_image}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <Image
-              src="https://i.fbcd.co/products/resized/resized-750-500/f07a63e8b76aed020e0824be80c735175956cc5f92ca3d55c966f679feaed994.webp"
-              className="h-full w-full object-cover"
-            />
-          )}
-        </div>
-        {/* do here */}
-        <div className="bg-white rounded-md w-full lg:w-5/5">
-          {data?.full_image ? (
-            checkResultMeassage ? (
-              <div className=" flex items-center justify-center mt-16 ">
-                {data?.licensePlate}
-              </div>
-            ) : data?.arrivalTime ? (
-              <div className=" flex items-center justify-center mt-16 ">
-                {data?.licensePlate}
-              </div>
+      <div className=" bg-grey rounded-md">
+        <div className="grid grid-cols-8 mb-0 p-2 gap-1  ">
+          <div className="bg-white rounded-md  flex items-center justify-center">
+            {lane_name}
+          </div>
+          <div className="bg-white rounded-md flex items-center justify-center ">
+            {data?.plate_image ? (
+              <Image
+                src={data.plate_image}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Image
+                src="https://www.khaosod.co.th/wpapp/uploads/2022/10/image1-34.png"
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
+
+          <div className="bg-white rounded-md flex items-center justify-center">
+            {data?.full_image ? (
+              <Image
+                src={data.full_image}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Image
+                src="https://www.headlightmag.com/main/images/stories/Worldsnewcar/Hyundai_Genesis_2014/Hyundai_Genesis_1.jpg"
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
+          {/* do here */}
+          <div className="bg-white rounded-md flex items-center justify-center">
+            {data?.full_image ? (
+              checkResultMeassage ? (
+                <div className=" flex items-center justify-center  ">
+                  {data?.licensePlate}
+                </div>
+              ) : data?.arrivalTime ? (
+                <div className=" flex items-center justify-center  ">
+                  {data?.licensePlate}
+                </div>
+              ) : (
+                <div>
+                  <Input
+                    className=" mt-6 w3/4"
+                    placeholder="Enter LicensePlate"
+                    value={inputdata.license_plate_number}
+                    onChange={(e) =>
+                      setInputData({
+                        ...inputdata,
+                        license_plate_number: e.target.value,
+                      })
+                    }
+                  />
+                  <div className="flex justify-end  mt-1">
+                    <Button onClick={handleRecieve}>Confirm</Button>
+                  </div>
+                </div>
+              )
             ) : (
               <div>
                 <Input
@@ -307,134 +347,164 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                       license_plate_number: e.target.value,
                     })
                   }
+                  disabled
                 />
                 <div className="flex justify-end  mt-1">
-                  <Button onClick={handleRecieve}>Confirm</Button>
+                  <Button onClick={handleRecieve} disabled>
+                    Confirm
+                  </Button>
                 </div>
               </div>
-            )
+            )}
+          </div>
+
+          {bookingData.length > 0 ? (
+            <div className="bg-white rounded-md  flex items-center justify-center ">
+              {bookingData.map((el, index) => (
+                <Popover
+                  key={index}
+                  content={
+                    <div>
+                      <div className="grid grid-flow-col justify-stretch">
+                        <div>
+                          <p>Booking Date:</p>
+                          <p>Booking Start:</p>
+                          <p>Booking End:</p>
+                          <p>Plate Number:</p>
+                          <p>Warehouse Code:</p>
+                          <p>Truck Type:</p>
+                          <p> Company Code:</p>
+                          <p> Sup Code:</p>
+                          <p> Sup Name:</p>
+                          <p> Operation Type:</p>
+                          <p> Driver Name:</p>
+                          <p> Tel:</p>
+                        </div>
+
+                        <div className="pl-10">
+                          <div>
+                            {dayjs(el?.bookingDate).format('YYYY-MM-DD')}
+                          </div>
+                          <div>{el?.bookingStart}</div>
+                          <div>{el?.bookingEnd}</div>
+                          <div>{el?.licensePlate}</div>
+                          <div>{el?.warehouseCode}</div>
+                          <div>{el?.truckType}</div>
+                          <div>{el?.companyCode}</div>
+                          <div>{el?.supCode}</div>
+                          <div>{el?.supName}</div>
+                          <div>{el?.operationType}</div>
+                          <div>{el?.driverName}</div>
+                          <div>{el?.telNo}</div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                >
+                  <Checkbox
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        console.log('Booking Date:', el.bookingDate)
+                        console.log('Booking Start:', el.bookingStart)
+                        console.log('Booking End:', el.bookingEnd)
+                        console.log('Plate Number:', el.licensePlate)
+                        console.log('Warehouse Code:', el.warehouseCode)
+                        console.log('Truck Type:', el.truckType)
+                        console.log('Company Code:', el.companyCode)
+                        console.log('Sup Code:', el.supCode)
+                        console.log('Sup Name:', el.supName)
+                        console.log('Operation Type:', el.operationType)
+                        console.log('Driver Name:', el.driverName)
+                        console.log('Tel:', el.telNo)
+
+                        setSelectedBookingIds([el.bookingId])
+                      } else {
+                        setSelectedBookingIds(
+                          selectBookingIds.filter((id) => id !== el.bookingId)
+                        )
+                      }
+                    }}
+                  />
+
+                  {el.bookingId}
+                </Popover>
+              ))}
+            </div>
           ) : (
-            <div>
-              <Input
-                className=" mt-6 w3/4"
-                placeholder="Enter LicensePlate"
-                value={inputdata.license_plate_number}
-                onChange={(e) =>
-                  setInputData({
-                    ...inputdata,
-                    license_plate_number: e.target.value,
-                  })
-                }
-                disabled
-              />
-              <div className="flex justify-end  mt-1">
-                <Button onClick={handleRecieve} disabled>
-                  Confirm
-                </Button>
+            <div className="bg-white flex items-center justify-center text-blue">
+              <div className=" rounded-md  h-8 pt-1 w-24">
+                <div className="flex justify-center">
+                  <Spin className="pt-1 pl-2 " />
+                </div>
               </div>
             </div>
           )}
-        </div>
 
-        <div className="bg-white rounded-md  flex items-center justify-center">
-          {bookingData.map((el, index) => (
-            <Popover
-              key={index}
-              content={
-                <div>
-                  <div className="grid grid-flow-col justify-stretch">
-                    <div>
-                      <p>
-                        Booking Date:{' '}
-                        {dayjs(el.bookingDate).format('YYYY-MM-DD')}
-                      </p>
-                      <p>Booking Start: {el.bookingStart}</p>
-                      <p>Booking End: {el.bookingEnd}</p>
-                      <p>Plate Number: {el.licensePlate}</p>
-                      <p>Warehouse Code: {el.warehouseCode}</p>
-                      <p>Truck Type: {el.truckType}</p>
-                      <p>Company Code: {el.companyCode}</p>
-                      <p>Sup Code: {el.supCode}</p>
-                      <p>Sup Name: {el.supName}</p>
-                      <p>Operation Type: {el.operationType}</p>
-                      <p>Driver Name: {el.driverName}</p>
-                      <p>Tel: {el.telNo}</p>
-                    </div>
-                  </div>
+          <div className="bg-white rounded-md  flex items-center justify-center">
+            {data?.driverName ? (
+              data?.driverName
+            ) : (
+              <div className="  rounded-md  h-8 pt-1 w-24">
+                <div className="flex justify-center">
+                  <Spin className="pt-1 pl-2 " />
                 </div>
+              </div>
+            )}
+          </div>
+          <div className="bg-white rounded-md  flex items-center justify-center">
+            {data?.status == 'success' ? (
+              <div className=" text-green">success</div>
+            ) : data?.status == 'early' ? (
+              <div className="text-orange">early</div>
+            ) : data?.status == 'late' ? (
+              <div className="text-orange">late</div>
+            ) : (
+              <div className=" rounded-md  h-8 pt-1 w-24">
+                <div className="flex justify-center">
+                  <Spin className="pt-1 pl-2 " />
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="bg-white rounded-md  flex items-center justify-center">
+            <Dropdown
+              overlay={
+                <Menu onClick={(e) => handleMenuClick(e)}>
+                  <Menu.Item
+                    key="CheckIn"
+                    disabled={
+                      !selectBookingIds.length ||
+                      !bookingData.some((el) => el.bookingId)
+                    }
+                  >
+                    CheckIn And OpenGate
+                  </Menu.Item>
+                  <Menu.Item key="OpenGate" disabled={isOpenGateError === true}>
+                    OpenGate
+                  </Menu.Item>
+                  <Menu.Item
+                    key="Reject"
+                    disabled={
+                      !selectBookingIds.length ||
+                      !bookingData.some((el) => el.bookingId)
+                    }
+                  >
+                    Reject
+                  </Menu.Item>
+                </Menu>
               }
             >
-              <Checkbox
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    console.log('Booking Date:', el.bookingDate)
-                    console.log('Booking Start:', el.bookingStart)
-                    console.log('Booking End:', el.bookingEnd)
-                    console.log('Plate Number:', el.licensePlate)
-                    console.log('Warehouse Code:', el.warehouseCode)
-                    console.log('Truck Type:', el.truckType)
-                    console.log('Company Code:', el.companyCode)
-                    console.log('Sup Code:', el.supCode)
-                    console.log('Sup Name:', el.supName)
-                    console.log('Operation Type:', el.operationType)
-                    console.log('Driver Name:', el.driverName)
-                    console.log('Tel:', el.telNo)
-
-                    setSelectedBookingIds([el.bookingId])
-                  } else {
-                    setSelectedBookingIds(
-                      selectBookingIds.filter((id) => id !== el.bookingId)
-                    )
-                  }
-                }}
-              />
-
-              {el.bookingId}
-            </Popover>
-          ))}
-        </div>
-        <div className="bg-white rounded-md  flex items-center justify-center">
-          {data?.driverName}
-        </div>
-        <div className="bg-white rounded-md  flex items-center justify-center">
-          {data?.status}
-        </div>
-        <div className="bg-white rounded-md  flex items-center justify-center">
-          <Dropdown
-            overlay={
-              <Menu onClick={(e) => handleMenuClick(e)}>
-                <Menu.Item
-                  key="CheckIn"
-                  disabled={
-                    !selectBookingIds.length ||
-                    !bookingData.some((el) => el.bookingId)
-                  }
-                >
-                  CheckIn And OpenGate
-                </Menu.Item>
-                <Menu.Item key="OpenGate">OpenGate</Menu.Item>
-                <Menu.Item
-                  key="Reject"
-                  disabled={
-                    !selectBookingIds.length ||
-                    !bookingData.some((el) => el.bookingId)
-                  }
-                >
-                  Reject
-                </Menu.Item>
-              </Menu>
-            }
-          >
-            <Button className="bg-sky flex rounded-md">
-              <span>Action</span>
-              <div className="flex items-center justify-center ml-2 mt-1.5 ">
-                <IoChevronDownOutline />
-              </div>
-            </Button>
-          </Dropdown>
+              <Button className="bg-sky flex rounded-md">
+                <span>Action</span>
+                <div className="flex items-center justify-center ml-2 mt-1.5 ">
+                  <IoChevronDownOutline />
+                </div>
+              </Button>
+            </Dropdown>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -458,7 +528,7 @@ export const WebSocket = () => {
   const [modalVisible, setModalVisible] = useState(false)
   const [modalBookingVisible, setModalBookingVisible] = useState(false)
   const [modalBookingId, setModalBookingId] = useState(false)
-  const [api, contextHolder] = notification.useNotification()
+  // const [api, contextHolder] = notification.useNotification()
   const [inputdata, setInputData] = useState({
     license_plate_number: '',
     lane: '',
@@ -1020,6 +1090,32 @@ export const WebSocket = () => {
         <ToastContainer />
 
         {/* <Table columns={testColumns} dataSource={receive} /> */}
+        <div className=" grid grid-cols-8 mb-0 p-2 gap-">
+          <div className="text-sky flex items-center justify-center font-semibold ">
+            Lane Name
+          </div>
+          <div className="text-sky flex items-center justify-center font-semibold  ">
+            License Plate Image
+          </div>
+          <div className="text-sky flex items-center justify-center font-semibold  ">
+            Car Image
+          </div>
+          <div className="text-sky flex items-center justify-center font-semibold  ">
+            License Plate
+          </div>
+          <div className="text-sky flex items-center justify-center font-semibold ">
+            Booking Id
+          </div>
+          <div className="text-sky flex items-center justify-center font-semibold ">
+            Driver
+          </div>
+          <div className="text-sky flex items-center justify-center font-semibold  ">
+            Status
+          </div>
+          <div className="text-sky flex items-center justify-center font-semibold  ">
+            Action
+          </div>
+        </div>
         {allLane.map((el) => (
           <LaneComponent lane={el.lane} lane_name={el.LaneName} />
         ))}
@@ -1102,7 +1198,7 @@ export const WebSocket = () => {
             </div>
           </div>
         </Modal>
-        {contextHolder}
+        {/* {contextHolder} */}
       </div>
     </div>
   )
