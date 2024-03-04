@@ -16,6 +16,7 @@ import {
   Popover,
   Checkbox,
   Grid,
+  Radio,
 } from 'antd'
 import dayjs from 'dayjs'
 import { IoChevronDownOutline } from 'react-icons/io5'
@@ -26,6 +27,7 @@ import { ColumnsType } from 'antd/es/table'
 import type { NotificationArgsProps } from 'antd'
 import Timer from './Timer'
 import { NotificationPlacements } from 'antd/es/notification/interface'
+import { FaCar } from 'react-icons/fa6'
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
 type NotificationPlacement = NotificationArgsProps['placement']
 
@@ -186,6 +188,10 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
 
         setBookingData(bookingData)
         setData(data[0])
+        setInputData((prev) => ({
+          ...prev,
+          license_plate_number: data[0].licensePlate,
+        }))
       }
     })
   }, [lane, socket])
@@ -318,24 +324,24 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Image
-                src="https://www.khaosod.co.th/wpapp/uploads/2022/10/image1-34.png"
-                className="h-full w-full object-cover"
-              />
+              <div className="flex w-full h-full px-2">
+                <div className="flex w-full h-full items-center justify-center">
+                  <p className="px-6 py-3 rounded-md text-ocenblue font-bold bg-white border-4 border-solid border-ocenblue">
+                    MM-2024
+                  </p>
+                </div>
+              </div>
             )}
           </div>
 
-          <div className="bg-white rounded-md flex items-center justify-center">
+          <div className="bg-white rounded-md flex items-center justify-center overflow-hidden">
             {data?.full_image ? (
               <Image
                 src={data.full_image}
                 className="h-full w-full object-cover"
               />
             ) : (
-              <Image
-                src="https://www.headlightmag.com/main/images/stories/Worldsnewcar/Hyundai_Genesis_2014/Hyundai_Genesis_1.jpg"
-                className="h-full w-full object-cover"
-              />
+              <FaCar className="text-9xl text-ocenblue" />
             )}
           </div>
           {/* do here */}
@@ -350,9 +356,9 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                   {data?.licensePlate}
                 </div>
               ) : (
-                <div className="grid grid-col-3">
+                <div className="flex flex-col px-2 gap-2">
                   <Input
-                    className=" mt-6 col-span-2"
+                    className="w-full"
                     placeholder="Enter LicensePlate"
                     value={inputdata.license_plate_number}
                     onChange={(e) =>
@@ -361,16 +367,19 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                         license_plate_number: e.target.value,
                       })
                     }
+                    allowClear
                   />
-                  <div className="flex justify-end  mt-1">
-                    <Button onClick={handleRecieve}>Confirm</Button>
+                  <div className="w-full">
+                    <Button className="w-full" onClick={handleRecieve}>
+                      Confirm
+                    </Button>
                   </div>
                 </div>
               )
             ) : (
-              <div className="grid grid-col-3">
+              <div className="flex flex-col gap-2 px-2">
                 <Input
-                  className=" mt-6 col-span-2"
+                  className="w-full"
                   placeholder="Enter LicensePlate"
                   value={inputdata.license_plate_number}
                   onChange={(e) =>
@@ -381,8 +390,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                   }
                   disabled
                 />
-                <div className="flex justify-end  mt-1">
-                  <Button onClick={handleRecieve} disabled>
+                <div className="w-full">
+                  <Button className="w-full" onClick={handleRecieve} disabled>
                     Confirm
                   </Button>
                 </div>
@@ -470,74 +479,72 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                 onOk={handleOk}
                 onCancel={handleCancel}
               >
-                {bookingData.map((el, index) => (
-                  <Popover
-                    key={index}
-                    content={
-                      <div>
-                        <div className="grid grid-flow-col justify-stretch">
-                          <div>
-                            <p>Booking Date:</p>
-                            <p>Booking Start:</p>
-                            <p>Booking End:</p>
-                            <p>Plate Number:</p>
-                            <p>Warehouse Code:</p>
-                            <p>Truck Type:</p>
-                            <p> Company Code:</p>
-                            <p> Sup Code:</p>
-                            <p> Sup Name:</p>
-                            <p> Operation Type:</p>
-                            <p> Driver Name:</p>
-                            <p> Tel:</p>
-                          </div>
-
-                          <div className="pl-10">
-                            <div>
-                              {dayjs(el?.bookingDate).format('YYYY-MM-DD')}
-                            </div>
-                            <div>{el?.bookingStart}</div>
-                            <div>{el?.bookingEnd}</div>
-                            <div>{el?.licensePlate}</div>
-                            <div>{el?.warehouseCode}</div>
-                            <div>{el?.truckType}</div>
-                            <div>{el?.companyCode}</div>
-                            <div>{el?.supCode}</div>
-                            <div>{el?.supName}</div>
-                            <div>{el?.operationType}</div>
-                            <div>{el?.driverName}</div>
-                            <div>{el?.telNo}</div>
-                          </div>
-                        </div>
-                      </div>
-                    }
-                  >
-                    <Checkbox
+                <Radio.Group value={selectBookingIds[0]}>
+                  {bookingData.map((el, index) => (
+                    <Radio
                       key={index}
                       onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedBookingIds([
-                            ...selectBookingIds,
-                            el.bookingId,
-                          ])
-                        } else {
-                          setSelectedBookingIds(
-                            selectBookingIds.filter((id) => id !== el.bookingId)
-                          )
+                        if (e.target.value) {
+                          setSelectedBookingIds([el.bookingId])
                         }
                       }}
-                      checked={selectBookingIds.includes(el.bookingId)}
+                      value={el.bookingId}
                     >
-                      {el.bookingId}
-                    </Checkbox>
-                  </Popover>
-                ))}
+                      <Popover
+                        key={index}
+                        content={
+                          <div>
+                            <div className="grid grid-flow-col justify-stretch">
+                              <div>
+                                <p>Booking Date:</p>
+                                <p>Booking Start:</p>
+                                <p>Booking End:</p>
+                                <p>Plate Number:</p>
+                                <p>Warehouse Code:</p>
+                                <p>Truck Type:</p>
+                                <p> Company Code:</p>
+                                <p> Sup Code:</p>
+                                <p> Sup Name:</p>
+                                <p> Operation Type:</p>
+                                <p> Driver Name:</p>
+                                <p> Tel:</p>
+                              </div>
+
+                              <div className="pl-10">
+                                <div>
+                                  {dayjs(el?.bookingDate).format('YYYY-MM-DD')}
+                                </div>
+                                <div>{el?.bookingStart}</div>
+                                <div>{el?.bookingEnd}</div>
+                                <div>{el?.licensePlate}</div>
+                                <div>{el?.warehouseCode}</div>
+                                <div>{el?.truckType}</div>
+                                <div>{el?.companyCode}</div>
+                                <div>{el?.supCode}</div>
+                                <div>{el?.supName}</div>
+                                <div>{el?.operationType}</div>
+                                <div>{el?.driverName}</div>
+                                <div>{el?.telNo}</div>
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      >
+                        {el.bookingId}
+                      </Popover>
+                    </Radio>
+                  ))}
+                </Radio.Group>
               </Modal>
             </div>
           ) : (
-            <div className="bg-white flex items-center justify-center text-blue">
+            <div className="bg-white flex items-center justify-center ">
               <div className=" rounded-md  h-8 pt-1 w-24">
                 <div className="flex justify-center">
-                  <Spin className="pt-1 pl-2 " />
+                  {/* <Spin className="pt-1 pl-2 " /> */}
+                  <span className="text-blue bg-white text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400">
+                    กำลังรอ
+                  </span>
                 </div>
               </div>
             </div>
@@ -549,22 +556,28 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             ) : (
               <div className="  rounded-md  h-8 pt-1 w-24">
                 <div className="flex justify-center">
-                  <Spin className="pt-1 pl-2 " />
+                  {/* <Spin className="pt-1 pl-2 " /> */}
+                  <span className="text-blue bg-white text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400">
+                    กำลังรอ
+                  </span>
                 </div>
               </div>
             )}
           </div>
           <div className="bg-white rounded-md  flex items-center justify-center">
             {data?.status == 'success' ? (
-              <div className=" text-green">success</div>
+              <div className=" text-green">สำเร็จ</div>
             ) : data?.status == 'early' ? (
-              <div className="text-orange">early</div>
+              <div className="text-orange">มาก่อนเวลาจอง</div>
             ) : data?.status == 'late' ? (
-              <div className="text-orange">late</div>
+              <div className="text-orange">มาหลังเวลาจอง</div>
             ) : (
               <div className=" rounded-md  h-8 pt-1 w-24">
                 <div className="flex justify-center">
-                  <Spin className="pt-1 pl-2 " />
+                  {/* <Spin className="pt-1 pl-2 " /> */}
+                  <span className="text-blue bg-white text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400">
+                    กำลังรอ
+                  </span>
                 </div>
               </div>
             )}
@@ -936,7 +949,7 @@ export const WebSocket = () => {
   //             <div className=" bg-rain rounded-md  h-8 pt-1 w-24">
   //               <div className="flex justify-center">
   //                 <div className="  text-center text-white font-medium">
-  //                   waiting
+  //                   กำลังรอ
   //                 </div>
   //                 <Spin className="pt-1 pl-2 " />
   //               </div>
