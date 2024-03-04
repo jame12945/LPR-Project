@@ -28,6 +28,7 @@ const config = {
       newGreen: '#047857',
       red: '#ef4444',
       orange: '#f59e0b',
+      newGray: '#9ca3af',
     },
   },
   plugins: [],

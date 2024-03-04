@@ -25,6 +25,7 @@ import { BookingSocketData } from '../type/booking'
 import { ColumnsType } from 'antd/es/table'
 import type { NotificationArgsProps } from 'antd'
 import Timer from './Timer'
+import { NotificationPlacements } from 'antd/es/notification/interface'
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
 type NotificationPlacement = NotificationArgsProps['placement']
 
@@ -67,6 +68,8 @@ export interface ReceiveData {
   id: number
   count: number
   arrivalTime: string
+  isCheckIn: boolean
+  isReject: boolean
 }
 
 export interface MenuClickParams {
@@ -102,6 +105,7 @@ type BOOKING_LIST_TYPE = {
   operationType: string
   driverName: string
   telNo: string
+  lane: string
 }
 
 const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
@@ -113,6 +117,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const [bookingData, setBookingData] = useState<BOOKING_LIST_TYPE[]>([])
   const [selectBookingIds, setSelectedBookingIds] = useState<string[]>([])
   const [api, contextHolder] = notification.useNotification()
+  const [selectedBookings, setSelectedBookings] = useState<string[]>([])
+  const [visible, setVisible] = useState(false)
   const [isOpenGateError, setIsOpenGateError] = useState<boolean>()
 
   const [inputdata, setInputData] = useState({
@@ -148,10 +154,16 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             openNotificationWithIcon('error')
           }
         })
-        // if (isOpenGateError === true) {
-        //   console.log('print something')
-        //   openNotificationWithIcon('error')
-        // }
+        if (data.length === 1) {
+          // const singleData = data.find((el) => el.lane === lane)
+          data.forEach((item) => {
+            console.log('hello!!!!!')
+            console.log(item.bookingId)
+            console.log(item.licensePlate)
+            setSelectedBookingIds([...selectBookingIds, item.bookingId])
+          })
+        }
+
         if (data.length > 1) setIsError(true)
 
         const bookingData = data.map((el) => ({
@@ -169,6 +181,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
           driverName: el.driverName,
           telNo: el.telNo,
           id: el.id,
+          lane: el.lane,
         }))
 
         setBookingData(bookingData)
@@ -205,15 +218,15 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             {
               licensePlate: selectedBooking.licensePlate,
               bookingId: selectedBooking.bookingId,
-              lane: laneNumber,
-              id: selectedBooking.id,
+              lane: laneNumber || null,
+              id: selectedBooking.id || null,
             }
           )
           console.log(
             `Check-in successful for booking ${selectedBooking.bookingId}`
           )
           console.log('Response:', response.data.data)
-          setData(response.data.data)
+          setData({ ...data, ...response.data.data })
         }
       } else if (e.key === 'Reject') {
         for (const bookingId of selectBookingIds) {
@@ -224,15 +237,16 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             'http://10.84.235.10:3000/bookings/reject',
             {
               licensePlate: selectedBooking.licensePlate,
-              bookingId: selectedBooking.bookingId,
+              bookingId: selectedBooking.bookingId || null,
               lane: laneNumber,
-              id: selectedBooking.id,
+              id: selectedBooking.id || null,
             }
           )
           console.log(
             `Reject successful for booking ${selectedBooking.bookingId}`
           )
           console.log('Response:', response.data)
+          setData({ ...data, ...response.data.data })
         }
       } else {
         response = await axios.post('http://10.84.235.10:3000/open-gate', {
@@ -246,6 +260,12 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
       console.error(`Error on ${e.key}:`, error)
       toast.error(`Action ${e.key} failed`)
     }
+  }
+  const openNotification = (placement: NotificationPlacement) => {
+    api.info({
+      message: 'Have Many Bookings',
+      description: <div>กรุณาเลือก BookingId</div>,
+    })
   }
 
   const handleRecieve = async () => {
@@ -270,12 +290,24 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
       console.log('Input Not Correct')
     }
   }
+
+  const handleBookingsButtonClick = () => {
+    setVisible(true)
+  }
+
+  const handleCancel = () => {
+    setVisible(false)
+  }
+
+  const handleOk = () => {
+    setVisible(false)
+  }
   return (
     <>
       {contextHolder}
 
       <div className=" bg-grey rounded-md">
-        <div className="grid grid-cols-8 mb-0 p-2 gap-1  ">
+        <div className="grid grid-cols-9 mb-0 p-2 gap-1  ">
           <div className="bg-white rounded-md  flex items-center justify-center">
             {lane_name}
           </div>
@@ -318,9 +350,9 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                   {data?.licensePlate}
                 </div>
               ) : (
-                <div>
+                <div className="grid grid-col-3">
                   <Input
-                    className=" mt-6 w3/4"
+                    className=" mt-6 col-span-2"
                     placeholder="Enter LicensePlate"
                     value={inputdata.license_plate_number}
                     onChange={(e) =>
@@ -336,9 +368,9 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                 </div>
               )
             ) : (
-              <div>
+              <div className="grid grid-col-3">
                 <Input
-                  className=" mt-6 w3/4"
+                  className=" mt-6 col-span-2"
                   placeholder="Enter LicensePlate"
                   value={inputdata.license_plate_number}
                   onChange={(e) =>
@@ -360,75 +392,146 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
 
           {bookingData.length > 0 ? (
             <div className="bg-white rounded-md  flex items-center justify-center ">
-              {bookingData.map((el, index) => (
-                <Popover
-                  key={index}
-                  content={
-                    <div>
-                      <div className="grid grid-flow-col justify-stretch">
-                        <div>
-                          <p>Booking Date:</p>
-                          <p>Booking Start:</p>
-                          <p>Booking End:</p>
-                          <p>Plate Number:</p>
-                          <p>Warehouse Code:</p>
-                          <p>Truck Type:</p>
-                          <p> Company Code:</p>
-                          <p> Sup Code:</p>
-                          <p> Sup Name:</p>
-                          <p> Operation Type:</p>
-                          <p> Driver Name:</p>
-                          <p> Tel:</p>
-                        </div>
-
-                        <div className="pl-10">
+              <div className="bg-white rounded-md  flex items-center justify-center">
+                {bookingData.length === 1 ? (
+                  <Popover
+                    content={
+                      <div>
+                        <div className="grid grid-flow-col justify-stretch">
                           <div>
-                            {dayjs(el?.bookingDate).format('YYYY-MM-DD')}
+                            <p>Booking Date:</p>
+                            <p>Booking Start:</p>
+                            <p>Booking End:</p>
+                            <p>Plate Number:</p>
+                            <p>Warehouse Code:</p>
+                            <p>Truck Type:</p>
+                            <p> Company Code:</p>
+                            <p> Sup Code:</p>
+                            <p> Sup Name:</p>
+                            <p> Operation Type:</p>
+                            <p> Driver Name:</p>
+                            <p> Tel:</p>
                           </div>
-                          <div>{el?.bookingStart}</div>
-                          <div>{el?.bookingEnd}</div>
-                          <div>{el?.licensePlate}</div>
-                          <div>{el?.warehouseCode}</div>
-                          <div>{el?.truckType}</div>
-                          <div>{el?.companyCode}</div>
-                          <div>{el?.supCode}</div>
-                          <div>{el?.supName}</div>
-                          <div>{el?.operationType}</div>
-                          <div>{el?.driverName}</div>
-                          <div>{el?.telNo}</div>
+
+                          <div className="pl-10">
+                            <div>
+                              {dayjs(bookingData[0]?.bookingDate).format(
+                                'YYYY-MM-DD'
+                              )}
+                            </div>
+                            <div>{bookingData[0].bookingStart}</div>
+                            <div>{bookingData[0]?.bookingEnd}</div>
+                            <div>{bookingData[0]?.licensePlate}</div>
+                            <div>{bookingData[0]?.warehouseCode}</div>
+                            <div>{bookingData[0]?.truckType}</div>
+                            <div>{bookingData[0]?.companyCode}</div>
+                            <div>{bookingData[0]?.supCode}</div>
+                            <div>{bookingData[0]?.supName}</div>
+                            <div>{bookingData[0]?.operationType}</div>
+                            <div>{bookingData[0]?.driverName}</div>
+                            <div>{bookingData[0]?.telNo}</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  }
-                >
-                  <Checkbox
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        console.log('Booking Date:', el.bookingDate)
-                        console.log('Booking Start:', el.bookingStart)
-                        console.log('Booking End:', el.bookingEnd)
-                        console.log('Plate Number:', el.licensePlate)
-                        console.log('Warehouse Code:', el.warehouseCode)
-                        console.log('Truck Type:', el.truckType)
-                        console.log('Company Code:', el.companyCode)
-                        console.log('Sup Code:', el.supCode)
-                        console.log('Sup Name:', el.supName)
-                        console.log('Operation Type:', el.operationType)
-                        console.log('Driver Name:', el.driverName)
-                        console.log('Tel:', el.telNo)
+                    }
+                  >
+                    <span>{bookingData[0].bookingId}</span>
+                  </Popover>
+                ) : (
+                  <>
+                    {bookingData.map((el, index) => (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          if (!selectedBookings.includes(el.bookingId)) {
+                            setSelectedBookingIds([
+                              ...selectBookingIds,
+                              el.bookingId,
+                            ])
+                          } else {
+                            setSelectedBookingIds(
+                              selectBookingIds.filter(
+                                (id) => id !== el.bookingId
+                              )
+                            )
+                          }
+                        }}
+                      ></div>
+                    ))}
+                    <Button onClick={handleBookingsButtonClick}>
+                      Bookings
+                    </Button>
+                  </>
+                )}
+              </div>
+              <Modal
+                title="Select Bookings"
+                open={visible}
+                onOk={handleOk}
+                onCancel={handleCancel}
+              >
+                {bookingData.map((el, index) => (
+                  <Popover
+                    key={index}
+                    content={
+                      <div>
+                        <div className="grid grid-flow-col justify-stretch">
+                          <div>
+                            <p>Booking Date:</p>
+                            <p>Booking Start:</p>
+                            <p>Booking End:</p>
+                            <p>Plate Number:</p>
+                            <p>Warehouse Code:</p>
+                            <p>Truck Type:</p>
+                            <p> Company Code:</p>
+                            <p> Sup Code:</p>
+                            <p> Sup Name:</p>
+                            <p> Operation Type:</p>
+                            <p> Driver Name:</p>
+                            <p> Tel:</p>
+                          </div>
 
-                        setSelectedBookingIds([el.bookingId])
-                      } else {
-                        setSelectedBookingIds(
-                          selectBookingIds.filter((id) => id !== el.bookingId)
-                        )
-                      }
-                    }}
-                  />
-
-                  {el.bookingId}
-                </Popover>
-              ))}
+                          <div className="pl-10">
+                            <div>
+                              {dayjs(el?.bookingDate).format('YYYY-MM-DD')}
+                            </div>
+                            <div>{el?.bookingStart}</div>
+                            <div>{el?.bookingEnd}</div>
+                            <div>{el?.licensePlate}</div>
+                            <div>{el?.warehouseCode}</div>
+                            <div>{el?.truckType}</div>
+                            <div>{el?.companyCode}</div>
+                            <div>{el?.supCode}</div>
+                            <div>{el?.supName}</div>
+                            <div>{el?.operationType}</div>
+                            <div>{el?.driverName}</div>
+                            <div>{el?.telNo}</div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <Checkbox
+                      key={index}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedBookingIds([
+                            ...selectBookingIds,
+                            el.bookingId,
+                          ])
+                        } else {
+                          setSelectedBookingIds(
+                            selectBookingIds.filter((id) => id !== el.bookingId)
+                          )
+                        }
+                      }}
+                      checked={selectBookingIds.includes(el.bookingId)}
+                    >
+                      {el.bookingId}
+                    </Checkbox>
+                  </Popover>
+                ))}
+              </Modal>
             </div>
           ) : (
             <div className="bg-white flex items-center justify-center text-blue">
@@ -467,6 +570,15 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             )}
           </div>
           <div className="bg-white rounded-md  flex items-center justify-center">
+            {data?.isCheckIn ? (
+              <div>CheckIn สำเร็จ</div>
+            ) : data?.isReject ? (
+              <div>ยกเลิกรายการ</div>
+            ) : (
+              <div></div>
+            )}
+          </div>
+          <div className="bg-white rounded-md  flex items-center justify-center">
             <Dropdown
               overlay={
                 <Menu onClick={(e) => handleMenuClick(e)}>
@@ -474,19 +586,26 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                     key="CheckIn"
                     disabled={
                       !selectBookingIds.length ||
-                      !bookingData.some((el) => el.bookingId)
+                      !bookingData.some((el) => el.bookingId) ||
+                      data?.isCheckIn
                     }
                   >
                     CheckIn And OpenGate
                   </Menu.Item>
-                  <Menu.Item key="OpenGate" disabled={isOpenGateError === true}>
+                  <Menu.Item
+                    key="OpenGate"
+                    disabled={
+                      isOpenGateError === true || data?.resultMessage === true
+                    }
+                  >
                     OpenGate
                   </Menu.Item>
                   <Menu.Item
                     key="Reject"
                     disabled={
                       !selectBookingIds.length ||
-                      !bookingData.some((el) => el.bookingId)
+                      !bookingData.some((el) => el.lane && el.licensePlate) ||
+                      data?.isCheckIn
                     }
                   >
                     Reject
@@ -1090,7 +1209,7 @@ export const WebSocket = () => {
         <ToastContainer />
 
         {/* <Table columns={testColumns} dataSource={receive} /> */}
-        <div className=" grid grid-cols-8 mb-0 p-2 gap-">
+        <div className=" grid grid-cols-9 mb-0 p-2 gap-">
           <div className="text-sky flex items-center justify-center font-semibold ">
             Lane Name
           </div>
@@ -1111,6 +1230,9 @@ export const WebSocket = () => {
           </div>
           <div className="text-sky flex items-center justify-center font-semibold  ">
             Status
+          </div>
+          <div className="text-sky flex items-center justify-center font-semibold  ">
+            CheckIn / Reject
           </div>
           <div className="text-sky flex items-center justify-center font-semibold  ">
             Action

@@ -79,7 +79,7 @@ function Lane() {
   return (
     <div className=" px-4 pt-4">
       <div className="grid grid-flow-row justify-stretch">
-        <div className=" bg-grey rounded-lg">
+        <div className=" bg-newGray rounded-lg">
           <h2 className="text-newGreen font-semibold pt-2 pb-2 pl-2">
             DvgId (Add)
           </h2>
@@ -145,7 +145,7 @@ function Lane() {
         </div>
         <div className="pl-0 pt-4">
           {' '}
-          <div className=" bg-grey rounded-lg">
+          <div className=" bg-newGray rounded-lg">
             <h2 className="text-red font-semibold pt-2 pb-2 pl-2">
               Door-ID (Delete)
             </h2>
