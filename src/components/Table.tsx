@@ -31,13 +31,13 @@ export interface ReceiveData {
   telNo: string
   node_name: string
   resultMessage: string
-  id: Number
+  id: number
 }
 
 export interface MenuClickParams {
-  bookingId: String
-  id: Number
-  licensePlate: String
+  bookingId: string
+  id: number
+  licensePlate: string
 }
 function TableDynamic() {
   const [dataSource, setDataSource] = useState([])
@@ -53,7 +53,7 @@ function TableDynamic() {
     const fetchData = async () => {
       try {
         const response = await axios.post(
-          'http://10.84.235.10:3000/bookings/filter',
+          `${import.meta.env.VITE_API_GATEWAY_URL}bookings/filter`,
           {}
         )
         console.log(response)
@@ -161,7 +161,7 @@ function TableDynamic() {
 
       try {
         const response = await axios.post(
-          'http://10.84.235.10:3000/bookings/check-in',
+          `${import.meta.env.VITE_API_GATEWAY_URL}bookings/check-in`,
           {
             bookingId: bookingId,
             licensePlate: licensePlate,
@@ -183,7 +183,7 @@ function TableDynamic() {
       const { e, bookingId, licensePlate, id } = record
       try {
         const response = await axios.post(
-          'http://10.84.235.10:3000/bookings/reject',
+          `${import.meta.env.VITE_API_GATEWAY_URL}bookings/reject`,
           {
             bookingId: bookingId,
             licensePlate: licensePlate,

@@ -220,7 +220,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
           console.log('selectedBooking.....')
           console.log(selectedBooking)
           response = await axios.post(
-            'http://10.84.235.10:3000/bookings/check-in',
+            `${import.meta.env.VITE_API_GATEWAY_URL}bookings/check-in`,
             {
               licensePlate: selectedBooking.licensePlate,
               bookingId: selectedBooking.bookingId,
@@ -240,7 +240,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             (el) => el.bookingId === bookingId
           )
           response = await axios.post(
-            'http://10.84.235.10:3000/bookings/reject',
+            `${import.meta.env.VITE_API_GATEWAY_URL}bookings/reject`,
             {
               licensePlate: selectedBooking.licensePlate,
               bookingId: selectedBooking.bookingId || null,
@@ -255,9 +255,12 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
           setData({ ...data, ...response.data.data })
         }
       } else {
-        response = await axios.post('http://10.84.235.10:3000/open-gate', {
-          lane: laneNumber,
-        })
+        response = await axios.post(
+          `${import.meta.env.VITE_API_GATEWAY_URL}open-gate`,
+          {
+            lane: laneNumber,
+          }
+        )
         console.log('Open Gate successful')
         console.log('Response:', response.data)
       }
@@ -283,13 +286,16 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     const laneNumber = parseInt(lane)
 
     try {
-      const response = await axios.post('http://10.84.235.10:3000/recieve', {
-        license_plate_number: inputdata.license_plate_number,
-        lane: laneNumber,
-        plate_image: data?.plate_image,
-        full_image: data?.full_image,
-        node_name: 'nodename',
-      })
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_GATEWAY_URL}recieve`,
+        {
+          license_plate_number: inputdata.license_plate_number,
+          lane: laneNumber,
+          plate_image: data?.plate_image,
+          full_image: data?.full_image,
+          node_name: 'nodename',
+        }
+      )
 
       console.log('Response:', response.data)
     } catch (error) {
@@ -673,7 +679,7 @@ export const WebSocket = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          'http://10.84.235.10:3000/door-setting'
+          `${import.meta.env.VITE_API_GATEWAY_URL}door-setting`
         )
         const data = response.data.data
         const updatedAllLane = data.map((item: LANE_LIST_TYPE) => ({
@@ -1081,7 +1087,7 @@ export const WebSocket = () => {
       const laneNumber = parseInt(record.lane.lane)
       try {
         const response = await axios.post(
-          'http://10.84.235.10:3000/bookings/check-in',
+          `${import.meta.env.VITE_API_GATEWAY_URL}bookings/check-in`,
           {
             licensePlate: licensePlate,
             bookingId: bookingId,
@@ -1115,7 +1121,7 @@ export const WebSocket = () => {
       const laneNumber = parseInt(record.lane.lane)
       try {
         const response = await axios.post(
-          'http://10.84.235.10:3000/bookings/reject',
+          `${import.meta.env.VITE_API_GATEWAY_URL}bookings/reject`,
           {
             licensePlate: licensePlate,
             bookingId: bookingId,
@@ -1136,7 +1142,7 @@ export const WebSocket = () => {
       const laneNumber = parseInt(record.lane.lane)
       try {
         const response = await axios.post(
-          'http://10.84.235.10:3000/open-gate',
+          `${import.meta.env.VITE_API_GATEWAY_URL}open-gate`,
           {
             lane: laneNumber,
           }
@@ -1195,13 +1201,16 @@ export const WebSocket = () => {
     const laneNumber = parseInt(eachLane)
 
     try {
-      const response = await axios.post('http://10.84.235.10:3000/recieve', {
-        license_plate_number: inputdata.license_plate_number,
-        lane: laneNumber,
-        plate_image: plateImage,
-        full_image: fullImage,
-        node_name: 'nodename', //Fix later
-      })
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_GATEWAY_URL}recieve`,
+        {
+          license_plate_number: inputdata.license_plate_number,
+          lane: laneNumber,
+          plate_image: plateImage,
+          full_image: fullImage,
+          node_name: 'nodename', //Fix later
+        }
+      )
       console.log(`Checking in successfully for booking of ${bookingId}`)
       console.log('Response:', response)
     } catch (error) {

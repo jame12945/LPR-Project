@@ -29,6 +29,7 @@ const config = {
       red: '#ef4444',
       orange: '#f59e0b',
       newGray: '#9ca3af',
+      skyLight: '#f0f9ff',
     },
   },
   plugins: [],

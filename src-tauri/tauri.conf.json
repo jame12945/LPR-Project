@@ -3,7 +3,7 @@
   "build": {
     "beforeBuildCommand": "vite build",
     "beforeDevCommand": "cross-env GENERATE_SOURCEMAP=false BROWSER=none npm run start",
-    "devPath": "http://localhost:8080",
+    "devPath": "http://localhost:8000",
     "distDir": "../build.",
     "withGlobalTauri": true
   },
