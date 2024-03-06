@@ -7,7 +7,6 @@ import {
   NotificationArgsProps,
   notification,
   Form,
-  Space,
 } from 'antd'
 import { TfiAlignJustify } from 'react-icons/tfi'
 import { FaPlusCircle } from 'react-icons/fa'
@@ -20,9 +19,6 @@ const layout = {
   wrapperCol: { span: 16 },
 }
 
-const tailLayout = {
-  wrapperCol: { offset: 8, span: 16 },
-}
 type NotificationPlacement = NotificationArgsProps['placement']
 type LANE_DATA_TYPE = {
   dvgId: number
@@ -43,11 +39,6 @@ function Lane() {
   const [setting, setSetting] = useState<boolean>(false)
   const [addLane, setAddLane] = useState<boolean>(false)
   const [selectedRowId, setSelectedRowId] = useState<number | null>(null)
-  const [selectedDvgId, setSelectedDvgId] = useState<number | null>(null)
-  const [selectedIoboxId, setSelectedIoboxId] = useState<number | null>(null)
-  const [selectedIoId, setSelectedIoId] = useState<number | null>(null)
-  const [selectedLane, setSelectedLane] = useState<number | null>(null)
-  const [selectedLaneName, setSelectedLaneName] = useState<string | null>(null)
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true)
   const [api, contextHolder] = notification.useNotification()
   const [refresh, setRefresh] = useState<boolean>(false)
@@ -91,7 +82,7 @@ function Lane() {
   const onReset = () => {
     if (form) {
       form.resetFields()
-      setSelectedDvgId(selectedDvgId || 0)
+      setDvgId(0)
       setIoboxId(0)
       setIoId(0)
       setLane(0)
@@ -99,10 +90,6 @@ function Lane() {
       setIsButtonDisabled(true)
       console.log('reset')
     }
-  }
-
-  const onFill = () => {
-    form.setFieldsValue({ id: 'Hello world' })
   }
 
   const addNotification = (placement: NotificationPlacement) => {
@@ -127,7 +114,7 @@ function Lane() {
       placement,
     })
   }
-
+  //change handleSetting-->handleConfigLane
   const handleSetting = (
     id: number,
     dvgId: number,
@@ -137,18 +124,18 @@ function Lane() {
     laneName: string
   ) => {
     setSelectedRowId(id)
-    setSelectedDvgId(dvgId)
-    setSelectedIoboxId(ioboxId)
-    setSelectedIoId(ioId)
-    setSelectedLane(lane)
-    setSelectedLaneName(laneName)
+    setDvgId(dvgId)
+    setIoboxId(ioboxId)
+    setIoId(ioId)
+    setLane(lane)
+    setLaneName(laneName)
     setSetting(true)
     form.setFieldsValue({
-      dvgId: selectedDvgId,
-      ioboxId: selectedIoboxId,
-      ioId: selectedIoId,
-      lane: selectedLane,
-      laneName: selectedLaneName,
+      dvgId: dvgId,
+      ioboxId: ioboxId,
+      ioId: ioId,
+      lane: lane,
+      laneName: laneName,
     })
   }
   const handleCancelSetting = () => {
@@ -183,19 +170,13 @@ function Lane() {
 
   useEffect(() => {
     form.setFieldsValue({
-      dvgId: selectedDvgId === null ? '' : selectedDvgId,
-      ioboxId: selectedIoboxId === null ? '' : selectedIoboxId,
-      ioId: selectedIoId === null ? '' : selectedIoId,
-      lane: selectedLane === null ? '' : selectedLane,
-      laneName: selectedLaneName === null ? '' : selectedLaneName,
+      dvgId: dvgId === 0 ? '' : dvgId,
+      ioboxId: ioboxId === 0 ? '' : ioboxId,
+      ioId: ioId === 0 ? '' : ioId,
+      lane: lane === 0 ? '' : lane,
+      laneName: laneName === '' ? '' : laneName,
     })
-  }, [
-    selectedDvgId,
-    selectedIoboxId,
-    selectedIoId,
-    selectedLane,
-    selectedLaneName,
-  ])
+  }, [dvgId, ioboxId, ioId, lane, laneName])
 
   const handleCancelAddLane = () => {
     setAddLane(false)
@@ -214,7 +195,6 @@ function Lane() {
           setLane(isNaN(numericValue) ? 0 : numericValue)
         } else if (name === 'dvgId') {
           setDvgId(isNaN(numericValue) ? 0 : numericValue)
-          setSelectedDvgId(isNaN(numericValue) ? 0 : numericValue)
         } else if (name === 'ioboxId') {
           setIoboxId(isNaN(numericValue) ? 0 : numericValue)
         } else if (name === 'ioId') {
@@ -453,11 +433,11 @@ function Lane() {
                         onChange={onChange}
                       />
                     </Form.Item>
-                    <Form.Item>
-                      <Button onClick={onReset}>Reset</Button>
-                    </Form.Item>
-                    <Form.Item>
-                      <div className="pt-4 pl-2 pb-2 flex items-end justify-end">
+                    <div className="flex gap-1 items-end justify-end">
+                      <Form.Item>
+                        <Button onClick={onReset}>Reset</Button>
+                      </Form.Item>
+                      <Form.Item>
                         <Button
                           type="primary"
                           onClick={handleConfirmLane}
@@ -465,8 +445,8 @@ function Lane() {
                         >
                           Confirm
                         </Button>
-                      </div>
-                    </Form.Item>
+                      </Form.Item>
+                    </div>
                   </Form>
                 </div>
               </div>
@@ -513,11 +493,11 @@ function Lane() {
                     onFinish={onFinish}
                     className=" w-400"
                     initialValues={{
-                      dvgId: selectedDvgId === null ? '' : selectedDvgId,
-                      ioboxId: selectedIoboxId === null ? '' : selectedIoboxId,
-                      ioId: selectedIoId === null ? '' : selectedIoId,
-                      lane: selectedLane === null ? '' : selectedLane,
-                      laneName: selectedLaneName === '' ? '' : selectedLaneName,
+                      dvgId: dvgId === 0 ? '' : dvgId,
+                      ioboxId: ioboxId === 0 ? '' : ioboxId,
+                      ioId: ioId === 0 ? '' : ioId,
+                      lane: lane === 0 ? '' : lane,
+                      laneName: laneName === '' ? '' : laneName,
                     }}
                   >
                     <Form.Item
@@ -527,7 +507,7 @@ function Lane() {
                     >
                       <Input
                         name="dvgId"
-                        value={dvgId === null ? '' : dvgId}
+                        value={dvgId === 0 ? '' : dvgId}
                         allowClear
                         placeholder="dvgId like : 1,2,3"
                         onChange={onChange}
@@ -587,11 +567,11 @@ function Lane() {
                         onChange={onChange}
                       />
                     </Form.Item>
-                    <Form.Item>
-                      <Button onClick={onReset}>Reset</Button>
-                    </Form.Item>
-                    <Form.Item>
-                      <div className="pt-4 pl-2 pb-2 flex items-end justify-end">
+                    <div className="flex gap-1 justify-end items-end">
+                      <Form.Item>
+                        <Button onClick={onReset}>Reset</Button>
+                      </Form.Item>
+                      <Form.Item>
                         <Button
                           type="primary"
                           onClick={handleConfirm}
@@ -599,21 +579,14 @@ function Lane() {
                         >
                           Confirm
                         </Button>
-                      </div>
-                    </Form.Item>
+                      </Form.Item>
+                    </div>
                   </Form>
                 </div>
               </div>
             </div>
           </div>
         </Modal>
-        <Form
-          {...layout}
-          form={form}
-          name="control-hooks"
-          onFinish={onFinish}
-          style={{ maxWidth: 400 }}
-        ></Form>
       </div>
     </>
   )
