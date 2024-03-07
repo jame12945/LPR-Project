@@ -16,20 +16,19 @@ const url = `${import.meta.env.VITE_API_GATEWAY_URL}`
 
 type NotificationPlacement = NotificationArgsProps['placement']
 type LANE_DATA_TYPE = {
+  id: number
   dvgId: number
-  ioBoxId: number
+  ioboxId: number
   ioId: number
   lane: number
   laneName: string
 }
 function Lane() {
-  const [doorId, setDoorId] = useState<number>(0)
   const [lane, setLane] = useState<number>(0)
   const [dvgId, setDvgId] = useState<number>(0)
   const [ioId, setIoId] = useState<number>(0)
   const [ioboxId, setIoboxId] = useState<number>(0)
-  const [deleteId, setDeleteId] = useState<number>(0)
-  const [laneData, setLaneData] = useState<LANE_DATA_TYPE>()
+  const [laneData, setLaneData] = useState<LANE_DATA_TYPE[]>([])
   const [laneName, setLaneName] = useState('')
   const [setting, setSetting] = useState<boolean>(false)
   const [addLane, setAddLane] = useState<boolean>(false)
@@ -67,7 +66,7 @@ function Lane() {
     }
   }, [dvgId, ioboxId, ioId, lane, laneName])
 
-  const onFinish = (value: any) => {
+  const onFinish = (value: LANE_DATA_TYPE) => {
     console.log(value)
   }
 
@@ -177,7 +176,7 @@ function Lane() {
     setAddLane(false)
   }
 
-  const onChange = (e) => {
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     if (name === 'laneName') {
       const newValue = value.replace(/[0-9]/g, '')
@@ -185,9 +184,7 @@ function Lane() {
     } else {
       const numericValue = parseInt(value, 10)
       if (!isNaN(numericValue) || value === '') {
-        if (name === 'doorId') {
-          setDoorId(isNaN(numericValue) ? 0 : numericValue)
-        } else if (name === 'lane') {
+        if (name === 'lane') {
           setLane(isNaN(numericValue) ? 0 : numericValue)
         } else if (name === 'dvgId') {
           setDvgId(isNaN(numericValue) ? 0 : numericValue)
@@ -198,10 +195,6 @@ function Lane() {
         }
       }
     }
-  }
-
-  const onDelete = (e) => {
-    setDeleteId(e.target.value)
   }
 
   const handleConfirm = async () => {
@@ -264,7 +257,6 @@ function Lane() {
         `${import.meta.env.VITE_API_GATEWAY_URL}door-setting/${selectedRowId}`
       )
       console.log('Delete response:', response)
-      setDeleteId(0)
       deleteNotification('top')
       handleRefresh()
     } catch (error) {
@@ -302,12 +294,14 @@ function Lane() {
     {
       title: <div className="text-center">Name</div>,
       dataIndex: 'laneName',
-      render: (laneName: string) => (
+      render: (laneName: string, record: LANE_DATA_TYPE) => (
         <div className="flex justify-center ">
           <div>{laneName}</div>
           <TfiAlignJustify
             className=" mt-1 ml-8 hover:text-blue cursor-pointer"
-            onClick={handleSetting}
+            onClick={() =>
+              handleSetting(record.id, dvgId, ioboxId, ioId, lane, laneName)
+            }
           />
         </div>
       ),
@@ -498,7 +492,6 @@ function Lane() {
                     placeholder="Input Id like : 1,2,3"
                     allowClear
                     value={selectedRowId === null ? '' : selectedRowId}
-                    onChange={onDelete}
                     disabled={selectedRowId == selectedRowId}
                   />
 

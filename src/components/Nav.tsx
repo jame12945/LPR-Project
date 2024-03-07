@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { NavBar } from '../styles/styledElements'
-import { FaTimes, FaCog } from 'react-icons/fa'
+import { FaCog } from 'react-icons/fa'
 
 function Navbar() {
   const [displayText, setDisplayText] = useState(
