@@ -14,11 +14,6 @@ import axios from 'axios'
 
 const url = `${import.meta.env.VITE_API_GATEWAY_URL}`
 
-const layout = {
-  labelCol: { span: 8 },
-  wrapperCol: { span: 16 },
-}
-
 type NotificationPlacement = NotificationArgsProps['placement']
 type LANE_DATA_TYPE = {
   dvgId: number
@@ -114,7 +109,7 @@ function Lane() {
       placement,
     })
   }
-  //change handleSetting-->handleConfigLane
+
   const handleSetting = (
     id: number,
     dvgId: number,

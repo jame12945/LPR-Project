@@ -1,32 +1,23 @@
 import { useContext, useEffect, useState } from 'react'
 import { WebSocketContext } from '../contexts/WebsocketContext'
 import {
-  Table,
   Menu,
   Dropdown,
   Button,
   Input,
   Modal,
-  Spin,
   Image,
-  Divider,
   notification,
-  Space,
   Select,
   Popover,
-  Checkbox,
-  Grid,
   Radio,
 } from 'antd'
 import dayjs from 'dayjs'
 import { IoChevronDownOutline } from 'react-icons/io5'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
-import { BookingSocketData } from '../type/booking'
-import { ColumnsType } from 'antd/es/table'
 import type { NotificationArgsProps } from 'antd'
 import Timer from './Timer'
-import { NotificationPlacements } from 'antd/es/notification/interface'
 import { FaCar } from 'react-icons/fa6'
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
 type NotificationPlacement = NotificationArgsProps['placement']
@@ -350,7 +341,6 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
               <FaCar className="text-9xl text-ocenblue" />
             )}
           </div>
-          {/* do here */}
           <div className="bg-white rounded-md flex items-center justify-center">
             {data?.full_image ? (
               checkResultMeassage ? (
@@ -547,7 +537,6 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             <div className="bg-white flex items-center justify-center ">
               <div className=" rounded-md  h-8 pt-1 w-24">
                 <div className="flex justify-center">
-                  {/* <Spin className="pt-1 pl-2 " /> */}
                   <span className="text-blue bg-white text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400">
                     กำลังรอ
                   </span>
@@ -562,7 +551,6 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             ) : (
               <div className="  rounded-md  h-8 pt-1 w-24">
                 <div className="flex justify-center">
-                  {/* <Spin className="pt-1 pl-2 " /> */}
                   <span className="text-blue bg-white text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400">
                     กำลังรอ
                   </span>
@@ -580,7 +568,6 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             ) : (
               <div className=" rounded-md  h-8 pt-1 w-24">
                 <div className="flex justify-center">
-                  {/* <Spin className="pt-1 pl-2 " /> */}
                   <span className="text-blue bg-white text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400">
                     กำลังรอ
                   </span>

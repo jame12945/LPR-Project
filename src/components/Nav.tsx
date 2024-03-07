@@ -20,11 +20,18 @@ function Navbar() {
         <ul className="flex align-middle list-none h-auto mt-7">
           <li className="flex ">
             <Link
-              to="/listview"
-              onClick={() => setDisplayText('Gate Pass')}
+              to="/history"
+              onClick={() => setDisplayText('Gate Pass (History)')}
               className="flex align-middle text-lg font-semibold text-white cursor-pointer ml-10 focus:text-blue focus:underline active:no-underline"
             >
               History View
+            </Link>
+            <Link
+              to="/list"
+              onClick={() => setDisplayText('Gate Pass (List)')}
+              className="flex align-middle text-lg font-semibold text-white cursor-pointer ml-10 focus:text-blue focus:underline active:no-underline"
+            >
+              List View
             </Link>
             <Link
               to="/lpr"

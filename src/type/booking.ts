@@ -21,3 +21,11 @@ export interface BookingSocketData {
   full_image?: string | null
   resultMessage?: string | null
 }
+export interface ListData {
+  no?: number
+  truckType?: string
+  bookingDate?: string
+  licensePlate?: string
+  driverName?: string
+  bookingId?: string
+}

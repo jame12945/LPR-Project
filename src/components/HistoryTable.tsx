@@ -39,7 +39,7 @@ export interface MenuClickParams {
   id: number
   licensePlate: string
 }
-function TableDynamic() {
+function HistoryComponent() {
   const [dataSource, setDataSource] = useState([])
   const [selectedId, setSelectedId] = useState('')
   const [modalVisible, setModalVisible] = useState(false)
@@ -116,7 +116,7 @@ function TableDynamic() {
       dataIndex: 'driverName',
     },
     {
-      title: 'BookingId',
+      title: 'Booking Id',
       dataIndex: 'bookingId',
       render: (text, record) => (
         <>
@@ -291,4 +291,4 @@ function TableDynamic() {
   )
 }
 
-export default TableDynamic
+export default HistoryComponent
