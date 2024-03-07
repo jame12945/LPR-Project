@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { Table, Menu, Dropdown, Button } from 'antd'
+import { Table } from 'antd'
 import { GiTruck } from 'react-icons/gi'
 import axios from 'axios'
 import dayjs from 'dayjs'
-import { ToastContainer, toast } from 'react-toastify'
+import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { IoChevronDownOutline } from 'react-icons/io5'
-import { Modal, Input, Space } from 'antd'
+
+import { Modal, Input } from 'antd'
 import type { SearchProps } from 'antd/es/input/Search'
 import Timer from './Timer'
 
-export interface ReceiveData {
+type RECEIVE_DATA = {
   full_image: string
   plate_image: string
   licensePlate: string
@@ -34,19 +34,13 @@ export interface ReceiveData {
   id: number
 }
 
-export interface MenuClickParams {
-  bookingId: string
-  id: number
-  licensePlate: string
-}
 function HistoryComponent() {
-  const [dataSource, setDataSource] = useState([])
-  const [selectedId, setSelectedId] = useState('')
-  const [modalVisible, setModalVisible] = useState(false)
-  const [selectedBooking, setSelectedBooking] = useState<ReceiveData | null>(
+  const [dataSource, setDataSource] = useState<RECEIVE_DATA[]>([])
+  const [modalVisible, setModalVisible] = useState<boolean>(false)
+  const [selectedBooking, setSelectedBooking] = useState<RECEIVE_DATA | null>(
     null
   )
-  const [responseData, setResponseData] = useState(null)
+  const [responseData, setResponseData] = useState<RECEIVE_DATA[] | null>(null)
   const { Search } = Input
 
   useEffect(() => {
@@ -81,7 +75,7 @@ function HistoryComponent() {
     {
       title: 'Type',
       dataIndex: 'truckType',
-      render: (text) => (
+      render: (text: string) => (
         <div className="flex">
           <GiTruck className=" text-4xl mr-4" />
           <div className="mt-2">{text}</div>
@@ -91,7 +85,7 @@ function HistoryComponent() {
     {
       title: 'Appointment Date',
       dataIndex: 'bookingDate',
-      render: (text, record) => {
+      render: (text: string, record: RECEIVE_DATA) => {
         const start = record.bookingStart
           ? record.bookingStart.substring(0, 5)
           : ''
@@ -118,7 +112,7 @@ function HistoryComponent() {
     {
       title: 'Booking Id',
       dataIndex: 'bookingId',
-      render: (text, record) => (
+      render: (text: string, record: RECEIVE_DATA) => (
         <>
           <div
             className="bg-sky rounded-md px-2 py-1.5 text-center hover:bg-rain hover:text-white"
@@ -130,87 +124,9 @@ function HistoryComponent() {
         </>
       ),
     },
-    // {
-    //   title: 'Manage',
-    //   dataIndex: 'manage',
-    //   render: (_, record) => (
-    //     <Dropdown
-    //       overlay={
-    //         <Menu onClick={(e) => handleMenuClick(e, record)}>
-    //           <Menu.Item key="CheckIn">CheckIn</Menu.Item>
-    //           {/* <Menu.Item key="OpenGate">OpenGate</Menu.Item> */}
-    //           <Menu.Item key="Reject">Reject</Menu.Item>
-    //         </Menu>
-    //       }
-    //     >
-    //       <Button className="bg-sky flex">
-    //         <span>Action</span>
-    //         <div className="flex items-center justify-center ml-2 mt-1.5 ">
-    //           <IoChevronDownOutline />
-    //         </div>
-    //       </Button>
-    //     </Dropdown>
-    //   ),
-    // },
   ]
 
-  const handleMenuClick = async (e: any, record: MenuClickParams) => {
-    if (e.key === 'CheckIn') {
-      const { e, bookingId, licensePlate, id } = record
-      setSelectedId(bookingId)
-
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_GATEWAY_URL}bookings/check-in`,
-          {
-            bookingId: bookingId,
-            licensePlate: licensePlate,
-            id: id,
-          }
-        )
-
-        console.log(`Checking in successfully for booking of ${bookingId}`)
-        console.log('Response:', response.data)
-        console.log('Data From Backend:', response.data.data.stampStatusData)
-
-        toast.success('ระบบทำการ CheckIn เรียบร้อยแล้ว')
-      } catch (error) {
-        console.error('CheckIn Error: ', error)
-        toast.error('Check-in failed!')
-      }
-    } else if (e.key === 'Reject') {
-      console.log('Reject')
-      const { e, bookingId, licensePlate, id } = record
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_GATEWAY_URL}bookings/reject`,
-          {
-            bookingId: bookingId,
-            licensePlate: licensePlate,
-            id: id,
-          }
-        )
-        console.log('Reject Succcess')
-        console.log('Response:', response.data)
-        toast.success('ระบบทำการ Reject เรียบร้อย ')
-      } catch (error) {
-        console.error('CheckIn Error: ', error)
-        toast.error('Check-in failed!')
-      }
-    } else {
-      setSelectedId(bookingId)
-
-      try {
-        const response = await axios.get('http://localhost:3000/opengate', {})
-        console.log('Response:', response.data)
-        toast.success('ระบบกำลังเปิดไม้กั้น')
-      } catch (error) {
-        toast.error('OpenGate Error')
-      }
-    }
-  }
-
-  const handleBooking = (record) => {
+  const handleBooking = (record: RECEIVE_DATA) => {
     setSelectedBooking(record)
     setModalVisible(true)
   }
@@ -219,9 +135,11 @@ function HistoryComponent() {
   }
   const onSearch: SearchProps['onSearch'] = (value, _e, info) => {
     console.log(info?.source, value)
-    const filterData = responseData.filter((item) =>
-      item?.licensePlate?.includes(value)
-    )
+    const filterData =
+      responseData?.filter((item: RECEIVE_DATA) =>
+        item?.licensePlate?.includes(value)
+      ) || []
+
     console.log(
       'filterData................................................................'
     )
