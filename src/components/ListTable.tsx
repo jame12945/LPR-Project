@@ -1,11 +1,4 @@
-import {
-  Table,
-  Input,
-  Modal,
-  Button,
-  notification,
-  NotificationArgsProps,
-} from 'antd'
+import { Table, Input, Modal, Button, notification } from 'antd'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import React, { useEffect, useState } from 'react'
@@ -15,11 +8,15 @@ import { ColumnsType } from 'antd/es/table'
 import { ListData } from '../type/booking'
 
 type BOOKING_LIST_TYPE = {
+  full_image: string
+  plate_image: string
+  licensePlate: string
+  booking: string
   bookingId: string
+  status: string
   bookingDate: string
   bookingStart: string
   bookingEnd: string
-  licensePlate: string
   warehouseCode: string
   truckType: string
   companyCode: string
@@ -27,7 +24,11 @@ type BOOKING_LIST_TYPE = {
   supName: string
   operationType: string
   driverName: string
+  lane: string
   telNo: string
+  node_name: string
+  resultMessage: string
+  id: number
 }
 
 type RECEIVE_DATA = {
@@ -54,7 +55,28 @@ type RECEIVE_DATA = {
   id: number
 }
 
-type NotificationPlacement = NotificationArgsProps['placement']
+type NOTIFICATION_TYPE = {
+  message: string
+  description: string
+  placement: NotificationPlacement
+}
+
+type NotificationPlacement =
+  | 'top'
+  | 'topLeft'
+  | 'topRight'
+  | 'bottom'
+  | 'bottomLeft'
+  | 'bottomRight'
+  | undefined
+
+interface ErrorResponse {
+  response: {
+    data: {
+      statusMessage: string
+    }
+  }
+}
 
 const url = `${import.meta.env.VITE_API_GATEWAY_URL}`
 
@@ -84,8 +106,8 @@ function ListComponent() {
     getList()
   }, [searchValue])
 
-  const handleBooking = (e) => {
-    setSelectedBooking(e)
+  const handleBooking = (event: ListData) => {
+    setSelectedBooking(event)
     setModalVisible(true)
   }
 
@@ -97,11 +119,12 @@ function ListComponent() {
     placement: NotificationPlacement,
     statusMessage: string
   ) => {
-    const notificationConfig: any = {
+    const notificationConfig: NOTIFICATION_TYPE = {
       message: '',
       description: statusMessage,
       placement,
     }
+
     if (statusMessage === 'เช็คอินสำเร็จ') {
       notificationConfig.message = 'Check In Successfully'
     } else {
@@ -111,30 +134,31 @@ function ListComponent() {
     api.info(notificationConfig)
   }
 
-  const handleCheckIn = async (bookingId: string, licensePLate: string) => {
+  const handleCheckIn = async (bookingId: string, licensePlate: string) => {
     console.log('check in')
 
     try {
       const response = await axios.post(`${url}bookings/check-in`, {
         bookingId: bookingId,
-        licensePLate: licensePLate,
+        licensePlate: licensePlate,
       })
       console.log(`Checking in successfully for booking of ${bookingId}`)
       console.log('Response:', response.data.statusMessage)
       const succesStatus = response.data.statusMessage.toString()
       alertNotification('top', succesStatus)
     } catch (error) {
-      console.log(error.response.data.statusMessage.toString())
-      const errorStatus = error.response.data.statusMessage.toString()
+      const errorStatus = (
+        error as ErrorResponse
+      ).response.data.statusMessage.toString()
       alertNotification('top', errorStatus)
     }
   }
 
-  const listCol: ColumnsType<ListData> = [
+  const listCol: ColumnsType<BOOKING_LIST_TYPE> = [
     {
       title: 'No.',
       dataIndex: 'no',
-      render: (text: any, event: any, index: number) => `${index + 1}`,
+      render: (text: string, event: ListData, index: number) => `${index + 1}`,
     },
     {
       title: 'Type',
@@ -149,7 +173,7 @@ function ListComponent() {
     {
       title: 'Appointment Date',
       dataIndex: 'bookingDate',
-      render: (bookingDate: string, event: any) => {
+      render: (bookingDate: string, event: ListData) => {
         const bookingStart = event.bookingStart
           ? event.bookingStart.substring(0, 5)
           : ''
@@ -179,7 +203,7 @@ function ListComponent() {
     {
       title: 'Booking Id',
       dataIndex: 'bookingId',
-      render: (bookingId: string, event: any) => (
+      render: (bookingId: string, event: ListData) => (
         <>
           <div
             className="bg-sky rounded-md px-2 py-1.5 text-center hover:bg-rain hover:text-white cursor-pointer"
@@ -193,9 +217,9 @@ function ListComponent() {
     {
       title: 'Manage',
       dataIndex: 'manage',
-      render: (_, event: any) => (
+      render: (_, event: ListData) => (
         <Button
-          onClick={() => handleCheckIn(event.bookingId, event.licensePLate)}
+          onClick={() => handleCheckIn(event.bookingId, event.licensePlate)}
         >
           Check In
         </Button>

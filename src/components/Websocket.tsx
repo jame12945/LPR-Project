@@ -261,12 +261,6 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
       toast.error(`Action ${e.key} failed`)
     }
   }
-  const openNotification = (placement: NotificationPlacement) => {
-    api.info({
-      message: 'Have Many Bookings',
-      description: <div>กรุณาเลือก BookingId</div>,
-    })
-  }
 
   const handleRecieve = async () => {
     console.log('License Plate Number', inputdata.license_plate_number)
@@ -1054,93 +1048,6 @@ export const WebSocket = () => {
   //     ),
   //   },
   // ]
-  const openNotification = (placement: NotificationPlacement) => {
-    api.info({
-      message: 'Booking Not Found',
-      description: (
-        <div>
-          กรุณาให้ รปภ.เป็นผู้ทำการอนุญาติ <br /> เพื่อให้รถผ่านเข้าไปข้างใน
-        </div>
-      ),
-      placement,
-    })
-  }
-
-  const handleMenuClick = async (e: any, record: MenuClickParams) => {
-    if (e.key === 'CheckIn') {
-      const { e, bookingId, licensePlate, lane, plateImage, fullImage, id } =
-        record
-
-      const laneNumber = parseInt(record.lane.lane)
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_GATEWAY_URL}bookings/check-in`,
-          {
-            licensePlate: licensePlate,
-            bookingId: bookingId,
-            lane: laneNumber,
-            id: id,
-          }
-        )
-        console.log(`Checking in successfully for booking of ${bookingId}`)
-        console.log('Response:', response.data)
-        console.log('Data From Backend:', response.data.data.status)
-        toast.success('ระบบทำการ CheckIn เรียบร้อยแล้ว')
-        const updatedReceive = receive.map((item) => {
-          if (item.bookingId === bookingId) {
-            console.log('Checking in successfully for')
-            return {
-              ...item,
-              status: response.data.data.status,
-            }
-          }
-          return item
-        })
-        setReceive(updatedReceive)
-      } catch (error) {
-        console.error('CheckIn Error: ', error)
-        toast.error('Check-in failed!')
-      }
-    } else if (e.key === 'FillData') {
-      setModalVisible(true)
-    } else if (e.key === 'Reject') {
-      const { bookingId, licensePlate, id } = record
-      const laneNumber = parseInt(record.lane.lane)
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_GATEWAY_URL}bookings/reject`,
-          {
-            licensePlate: licensePlate,
-            bookingId: bookingId,
-            lane: laneNumber,
-            id: id,
-          }
-        )
-        console.log('Reject Succcess')
-        console.log('Response:', response.data)
-        toast.success('ระบบทำการ Reject เรียบร้อย ')
-      } catch (error) {
-        console.error('CheckIn Error: ', error)
-        toast.error('Check-in failed!')
-      }
-    } else {
-      const { bookingId, lane } = record
-      setSelectedId(bookingId)
-      const laneNumber = parseInt(record.lane.lane)
-      try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_GATEWAY_URL}open-gate`,
-          {
-            lane: laneNumber,
-          }
-        )
-        console.log('Response:', response.data)
-        toast.success('ระบบกำลังเปิดไม้กั้น')
-      } catch (error) {
-        toast.error('OpenGate Error')
-      }
-    }
-  }
 
   const handleModalCancel = () => {
     setModalVisible(false)
@@ -1157,8 +1064,6 @@ export const WebSocket = () => {
     console.log('Lane:', eachLane)
     console.log('Plate Image:', plateImage)
     console.log('Full Image:', fullImage)
-
-    const laneNumber = parseInt(eachLane)
 
     try {
       const selectedData = matchItems.find(
@@ -1206,18 +1111,11 @@ export const WebSocket = () => {
     setModalVisible(false)
   }
 
-  const handleBooking = (record: ReceiveData) => {
-    setSelectedBooking(record)
-    setModalBookingVisible(true)
-  }
-
   return (
     <div className="px-4">
       <div>
         <Timer />
         <ToastContainer />
-
-        {/* <Table columns={testColumns} dataSource={receive} /> */}
         <div className=" grid grid-cols-9 mb-0 p-2 gap-">
           <div className="text-sky flex items-center justify-center font-semibold ">
             Lane Name
