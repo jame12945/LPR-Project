@@ -364,7 +364,13 @@ function Lane() {
                     <Form.Item
                       name="dvgId"
                       label="DvgId"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                          pattern: /[0-9]+$/,
+                          max: 3,
+                        },
+                      ]}
                     >
                       <Input
                         name="dvgId"
@@ -378,7 +384,13 @@ function Lane() {
                     <Form.Item
                       name="ioboxId"
                       label="IoboxId"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                          pattern: /[0-9]+$/,
+                          max: 3,
+                        },
+                      ]}
                     >
                       <Input
                         name="ioboxId"
@@ -392,7 +404,13 @@ function Lane() {
                     <Form.Item
                       name="ioId"
                       label="IoId"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                          pattern: /[0-9]+$/,
+                          max: 3,
+                        },
+                      ]}
                     >
                       <Input
                         name="ioId"
@@ -405,7 +423,13 @@ function Lane() {
                     <Form.Item
                       name="lane"
                       label="Lane"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                          pattern: /[0-9]+$/,
+                          max: 3,
+                        },
+                      ]}
                     >
                       <Input
                         name="lane"
@@ -418,7 +442,11 @@ function Lane() {
                     <Form.Item
                       name="laneName"
                       label="LaneName"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                        },
+                      ]}
                     >
                       <Input
                         name="laneName"
@@ -498,7 +526,13 @@ function Lane() {
                     <Form.Item
                       name="dvgId"
                       label="DvgId"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                          pattern: /[0-9]+$/,
+                          max: 3,
+                        },
+                      ]}
                     >
                       <Input
                         name="dvgId"
@@ -526,7 +560,13 @@ function Lane() {
                     <Form.Item
                       name="ioId"
                       label="IoId"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                          pattern: /[0-9]+$/,
+                          max: 3,
+                        },
+                      ]}
                     >
                       <Input
                         name="ioId"
@@ -539,7 +579,13 @@ function Lane() {
                     <Form.Item
                       name="lane"
                       label="Lane"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                          pattern: /[0-9]+$/,
+                          max: 3,
+                        },
+                      ]}
                     >
                       <Input
                         name="lane"
@@ -552,7 +598,11 @@ function Lane() {
                     <Form.Item
                       name="laneName"
                       label="LaneName"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                        },
+                      ]}
                     >
                       <Input
                         name="laneName"
