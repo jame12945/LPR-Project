@@ -180,7 +180,8 @@ function Lane() {
   const onChange = (e) => {
     const { name, value } = e.target
     if (name === 'laneName') {
-      setLaneName(value)
+      const newValue = value.replace(/[0-9]/g, '')
+      setLaneName(newValue)
     } else {
       const numericValue = parseInt(value, 10)
       if (!isNaN(numericValue) || value === '') {
@@ -445,6 +446,7 @@ function Lane() {
                       rules={[
                         {
                           required: true,
+                          pattern: /^[A-Za-z]+$/,
                         },
                       ]}
                     >
@@ -546,7 +548,13 @@ function Lane() {
                     <Form.Item
                       name="ioboxId"
                       label="IoboxId"
-                      rules={[{ required: true }]}
+                      rules={[
+                        {
+                          required: true,
+                          pattern: /[0-9]+$/,
+                          max: 3,
+                        },
+                      ]}
                     >
                       <Input
                         name="ioboxId"
@@ -601,6 +609,7 @@ function Lane() {
                       rules={[
                         {
                           required: true,
+                          pattern: /^[A-Za-z]+$/,
                         },
                       ]}
                     >
