@@ -16,11 +16,9 @@ import dayjs from 'dayjs'
 import { IoChevronDownOutline } from 'react-icons/io5'
 import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
-import type { NotificationArgsProps } from 'antd'
 import Timer from './Timer'
 import { FaCar } from 'react-icons/fa6'
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
-type NotificationPlacement = NotificationArgsProps['placement']
 
 export interface BookingType {
   lane: string
@@ -105,15 +103,12 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const socket = useContext(WebSocketContext)
 
   const [data, setData] = useState<ReceiveData>()
-  const [isError, setIsError] = useState<boolean>(false)
   const [checkResultMeassage, setCheckResultMeassage] = useState<boolean>()
   const [bookingData, setBookingData] = useState<BOOKING_LIST_TYPE[]>([])
   const [selectBookingIds, setSelectedBookingIds] = useState<string[]>([])
   const [api, contextHolder] = notification.useNotification()
-  const [selectedBookings, setSelectedBookings] = useState<string[]>([])
   const [visible, setVisible] = useState(false)
   const [isOpenGateError, setIsOpenGateError] = useState<boolean>()
-
   const [inputdata, setInputData] = useState({
     license_plate_number: '',
     lane: '',
@@ -156,8 +151,6 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             setSelectedBookingIds([...selectBookingIds, item.bookingId])
           })
         }
-
-        if (data.length > 1) setIsError(true)
 
         const bookingData = data.map((el) => ({
           bookingId: el.bookingId,
@@ -336,38 +329,16 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             )}
           </div>
           <div className="bg-white rounded-md flex items-center justify-center">
-            {data?.full_image ? (
-              checkResultMeassage ? (
-                <div className=" flex items-center justify-center  ">
-                  {data?.licensePlate}
-                </div>
-              ) : data?.arrivalTime ? (
-                <div className=" flex items-center justify-center  ">
-                  {data?.licensePlate}
-                </div>
-              ) : (
-                <div className="flex flex-col px-2 gap-2">
-                  <Input
-                    className="w-full"
-                    placeholder="Enter LicensePlate"
-                    value={inputdata.license_plate_number}
-                    onChange={(e) =>
-                      setInputData({
-                        ...inputdata,
-                        license_plate_number: e.target.value,
-                      })
-                    }
-                    allowClear
-                  />
-                  <div className="w-full">
-                    <Button className="w-full" onClick={handleRecieve}>
-                      Confirm
-                    </Button>
-                  </div>
-                </div>
-              )
+            {checkResultMeassage ? (
+              <div className=" flex items-center justify-center  ">
+                {data?.licensePlate}
+              </div>
+            ) : data?.arrivalTime ? (
+              <div className=" flex items-center justify-center  ">
+                {data?.licensePlate}
+              </div>
             ) : (
-              <div className="flex flex-col gap-2 px-2">
+              <div className="flex flex-col px-2 gap-2">
                 <Input
                   className="w-full"
                   placeholder="Enter LicensePlate"
@@ -378,10 +349,10 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                       license_plate_number: e.target.value,
                     })
                   }
-                  disabled
+                  allowClear
                 />
                 <div className="w-full">
-                  <Button className="w-full" onClick={handleRecieve} disabled>
+                  <Button className="w-full" onClick={handleRecieve}>
                     Confirm
                   </Button>
                 </div>
@@ -442,7 +413,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                       <div
                         key={index}
                         onClick={() => {
-                          if (!selectedBookings.includes(el.bookingId)) {
+                          if (!selectBookingIds.includes(el.bookingId)) {
                             setSelectedBookingIds([
                               ...selectBookingIds,
                               el.bookingId,
@@ -592,14 +563,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                   >
                     CheckIn And OpenGate
                   </Menu.Item>
-                  <Menu.Item
-                    key="OpenGate"
-                    disabled={
-                      isOpenGateError === true || data?.resultMessage === true
-                    }
-                  >
-                    OpenGate
-                  </Menu.Item>
+                  <Menu.Item key="OpenGate">OpenGate</Menu.Item>
                   <Menu.Item
                     key="Reject"
                     disabled={

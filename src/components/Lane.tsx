@@ -8,9 +8,9 @@ import {
   notification,
   Form,
 } from 'antd'
-import { TfiAlignJustify } from 'react-icons/tfi'
 import { FaPlusCircle } from 'react-icons/fa'
 import axios from 'axios'
+import { IoIosMore } from 'react-icons/io'
 
 const url = `${import.meta.env.VITE_API_GATEWAY_URL}`
 
@@ -297,7 +297,7 @@ function Lane() {
       render: (laneName: string, record: LANE_DATA_TYPE) => (
         <div className="flex justify-center ">
           <div>{laneName}</div>
-          <TfiAlignJustify
+          <IoIosMore
             className=" mt-1 ml-8 hover:text-blue cursor-pointer"
             onClick={() =>
               handleSetting(record.id, dvgId, ioboxId, ioId, lane, laneName)
@@ -326,6 +326,7 @@ function Lane() {
         <Table
           columns={laneCol}
           dataSource={laneData}
+          pagination={false}
           onRow={(record) => ({
             onClick: () =>
               handleSetting(
@@ -355,6 +356,7 @@ function Lane() {
                     name="config-lane"
                     onFinish={onFinish}
                     className=" w-400"
+                    layout="vertical"
                   >
                     <Form.Item
                       name="dvgId"
@@ -510,6 +512,7 @@ function Lane() {
                     name="config-lane"
                     onFinish={onFinish}
                     className=" w-400"
+                    layout="vertical"
                     initialValues={{
                       dvgId: dvgId === 0 ? '' : dvgId,
                       ioboxId: ioboxId === 0 ? '' : ioboxId,
