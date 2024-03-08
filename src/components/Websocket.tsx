@@ -103,7 +103,6 @@ type BOOKING_LIST_TYPE = {
 
 const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const socket = useContext(WebSocketContext)
-
   const [data, setData] = useState<ReceiveData>()
   const [checkResultMeassage, setCheckResultMeassage] = useState<boolean>()
   const [bookingData, setBookingData] = useState<BOOKING_LIST_TYPE[]>([])
@@ -114,6 +113,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     license_plate_number: '',
     lane: '',
   })
+  const formattedArrivalTime = dayjs(data?.arrivalTime).format('DD/MM/YY HH:mm')
   const openNotificationWithIcon = (type: NotificationType) => {
     api[type]({
       message: 'Open Gate Error',
@@ -187,84 +187,6 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     }))
     setBookingData(updatedBookingData)
   }, [selectBookingIds])
-
-  // const handleMenuClick = async (
-  //   e: React.MouseEvent<HTMLButtonElement>,
-  //   action: string
-  // ) => {
-  //   const laneNumber = parseInt(lane)
-  //   console.log('laneNumber......')
-  //   console.log(laneNumber)
-  //   console.log('BookingData.....')
-  //   console.log(bookingData)
-  //   try {
-  //     let response
-  //     if (action === 'CheckIn') {
-  //       for (const bookingId of selectBookingIds) {
-  //         const selectedBooking = bookingData.find(
-  //           (el) => el.bookingId === bookingId
-  //         )
-  //         console.log('selectedBooking.....')
-  //         console.log(selectedBooking)
-
-  //         if (selectedBooking) {
-  //           response = await axios.post(
-  //             `${import.meta.env.VITE_API_GATEWAY_URL}bookings/check-in`,
-  //             {
-  //               licensePlate: selectedBooking.licensePlate,
-  //               bookingId: selectedBooking.bookingId,
-  //               lane: laneNumber || null,
-  //               id: selectedBooking.id || null,
-  //             }
-  //           )
-
-  //           console.log(
-  //             `Check-in successful for booking ${selectedBooking.bookingId}`
-  //           )
-  //           console.log('Response:', response.data.data)
-  //           setData({ ...data, ...response.data.data })
-  //         }
-  //       }
-  //     } else if (action === 'Reject') {
-  //       for (const bookingId of selectBookingIds) {
-  //         const selectedBooking = bookingData.find(
-  //           (el) => el.bookingId === bookingId
-  //         )
-  //         if (selectedBooking) {
-  //           response = await axios.post(
-  //             `${import.meta.env.VITE_API_GATEWAY_URL}bookings/reject`,
-  //             {
-  //               licensePlate: selectedBooking.licensePlate,
-  //               bookingId: selectedBooking.bookingId || null,
-  //               lane: laneNumber,
-  //               id: selectedBooking.id || null,
-  //             }
-  //           )
-
-  //           console.log(
-  //             `Reject successful for booking ${selectedBooking.bookingId}`
-  //           )
-
-  //           console.log('Response:', response.data)
-  //           setData({ ...data, ...response.data.data })
-  //         }
-  //       }
-  //     } else {
-  //       response = await axios.post(
-  //         `${import.meta.env.VITE_API_GATEWAY_URL}open-gate`,
-  //         {
-  //           lane: laneNumber,
-  //         }
-  //       )
-  //       console.log('Open Gate successful')
-  //       console.log('Response:', response.data)
-  //     }
-  //     toast.success(`Action ${action} successful`)
-  //   } catch (error) {
-  //     console.error(`Error on ${action}:`, error)
-  //     toast.error(`Action ${action} failed`)
-  //   }
-  // }
 
   const handleMenuClick = async ({ key }: { key: React.Key }) => {
     const action = key as string
@@ -383,7 +305,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
       {contextHolder}
 
       <div className=" bg-grey rounded-md">
-        <div className="grid grid-cols-9 mb-0 p-2 gap-1  ">
+        <div className="grid grid-cols-10 mb-0 p-2 gap-1  ">
           <div className="bg-white rounded-md  flex items-center justify-center">
             {lane_name}
           </div>
@@ -568,12 +490,17 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             )}
           </div>
           <div className="bg-white rounded-md  flex items-center justify-center">
+            {data?.arrivalTime ? formattedArrivalTime : ''}
+          </div>
+          <div className="bg-white rounded-md  flex items-center justify-center">
             {data?.status == 'success' ? (
               <div className=" text-green">สำเร็จ</div>
             ) : data?.status == 'early' ? (
               <div className="text-orange">มาก่อนเวลาจอง</div>
             ) : data?.status == 'late' ? (
               <div className="text-orange">มาหลังเวลาจอง</div>
+            ) : data?.status == 'bookingNotFound' ? (
+              <div className="text-red">ไม่พบการจอง</div>
             ) : (
               <div className=" rounded-md  h-8 pt-1 w-24">
                 <div className="flex justify-center">
@@ -663,7 +590,7 @@ export const WebSocket = () => {
       <div>
         <Timer />
         <ToastContainer />
-        <div className=" grid grid-cols-9 mb-0 p-2 gap-">
+        <div className=" grid grid-cols-10 mb-0 p-2 gap-">
           <div className="text-sky flex items-center justify-center font-semibold ">
             Lane Name
           </div>
@@ -681,6 +608,9 @@ export const WebSocket = () => {
           </div>
           <div className="text-sky flex items-center justify-center font-semibold ">
             Driver
+          </div>
+          <div className="text-sky flex items-center justify-center font-semibold  ">
+            Date/Time
           </div>
           <div className="text-sky flex items-center justify-center font-semibold  ">
             Status

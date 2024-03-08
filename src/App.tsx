@@ -4,18 +4,21 @@ import HistoryPage from './pages/HistoryPage'
 import LprPage from './pages/LprPage'
 import ConfigLanePage from './pages/ConfigLanePage'
 import ListviewPage from './pages/ListVIewPage'
+import { MasterProvider } from './contexts/MasterContext'
 
 function App() {
   return (
     <>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<LprPage />} />
-        <Route path="/history" element={<HistoryPage />} />
-        <Route path="/lpr" element={<LprPage />} />
-        <Route path="/setting" element={<ConfigLanePage />} />
-        <Route path="/list" element={<ListviewPage />} />
-      </Routes>
+      <MasterProvider>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<LprPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/lpr" element={<LprPage />} />
+          <Route path="/setting" element={<ConfigLanePage />} />
+          <Route path="/list" element={<ListviewPage />} />
+        </Routes>
+      </MasterProvider>
     </>
   )
 }
