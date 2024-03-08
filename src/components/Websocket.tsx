@@ -595,7 +595,7 @@ export const WebSocket = () => {
             Lane Name
           </div>
           <div className="text-sky flex items-center justify-center font-semibold  ">
-            License Plate Image
+            Plate Image
           </div>
           <div className="text-sky flex items-center justify-center font-semibold  ">
             Car Image
