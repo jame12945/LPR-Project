@@ -163,9 +163,6 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         if (data.length === 1) {
           // const singleData = data.find((el) => el.lane === lane)
           data.forEach((item) => {
-            console.log('hello!!!!!')
-            console.log(item.bookingId)
-            console.log(item.licensePlate)
             setSelectedBookingIds([...selectBookingIds, item.bookingId])
             if (item?.status === 'bookingNotFound') {
               playNotification('ไม่พบ Booking ')
@@ -262,6 +259,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
           )
 
           if (selectedBooking) {
+            //ยังซำ้ยุค่อยแก้
             response = await axios.post(
               `${import.meta.env.VITE_API_GATEWAY_URL}bookings/reject`,
               {
@@ -278,6 +276,42 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
 
             console.log('Response:', response.data)
             setData({ ...data, ...response.data.data })
+          }
+        }
+      } else if (action === 'Reset') {
+        setBookingData([])
+        setSelectedBookingIds([])
+        setData(undefined)
+      } else if (action === 'RejectOpengate') {
+        for (const bookingId of selectBookingIds) {
+          const selectedBooking = bookingData.find(
+            (el) => el.bookingId === bookingId
+          )
+
+          if (selectedBooking) {
+            response = await axios.post(
+              `${import.meta.env.VITE_API_GATEWAY_URL}bookings/reject`,
+              {
+                licensePlate: selectedBooking.licensePlate,
+                bookingId: selectedBooking.bookingId || null,
+                lane: laneNumber,
+                id: selectedBooking.id || null,
+              }
+            )
+
+            console.log(
+              `Reject successful for booking ${selectedBooking.bookingId}`
+            )
+            console.log('Response:', response.data)
+            setData({ ...data, ...response.data.data })
+
+            const responseOpenGate = await axios.post(
+              `${import.meta.env.VITE_API_GATEWAY_URL}open-gate`,
+              {
+                lane: laneNumber,
+              }
+            )
+            console.log('Response Opengate  Data', responseOpenGate.data)
           }
         }
       } else {
@@ -641,6 +675,10 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                     }
                   >
                     Reject
+                  </Menu.Item>
+                  <Menu.Item key="Reset">Reset</Menu.Item>
+                  <Menu.Item key="RejectOpengate">
+                    Reject With Opengate
                   </Menu.Item>
                 </Menu>
               }
