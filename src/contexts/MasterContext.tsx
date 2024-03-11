@@ -1,31 +1,57 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 import { ReceiveData } from '../components/Websocket'
 
-interface ContextProps {
-  lastRecord: ReceiveData | null
-  setLastRecord: React.Dispatch<React.SetStateAction<ReceiveData | null>>
+interface LastReceivedDataContextType {
+  lastReceivedData: ReceiveData[]
+  updateLastReceivedData: (data: ReceiveData) => void
 }
 
-export const MasterContext = createContext<ContextProps | null>(null)
+const LastReceivedDataContext = createContext<LastReceivedDataContextType>({
+  lastReceivedData: [],
+  updateLastReceivedData: () => {},
+})
 
-export const MasterProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
-  const [lastRecord, setLastRecord] = useState<ReceiveData | null>(null)
+export const LastReceivedDataProvider: React.FC<{
+  children: React.ReactNode
+}> = ({ children }) => {
+  const [lastReceivedData, setLastReceivedData] = useState<ReceiveData[]>([])
+
+  const updateLastReceivedData = (data: ReceiveData) => {
+    setLastReceivedData((prevData) => {
+      const existingLaneIndex = prevData.findIndex(
+        (item) => item.lane === data.lane
+      )
+
+      if (existingLaneIndex !== -1) {
+        prevData[existingLaneIndex] = data
+      } else {
+        prevData.push(data)
+      }
+      const uniqueData = prevData.reduce(
+        (acc: ReceiveData[], current: ReceiveData) => {
+          const x = acc.find((item) => item.lane === current.lane)
+          if (!x) {
+            return acc.concat([current])
+          } else {
+            return acc
+          }
+        },
+        []
+      )
+
+      return uniqueData
+    })
+  }
+
+  console.log('lastReceivedData-->', lastReceivedData)
 
   return (
-    <MasterContext.Provider value={{ lastRecord, setLastRecord }}>
+    <LastReceivedDataContext.Provider
+      value={{ lastReceivedData, updateLastReceivedData }}
+    >
       {children}
-    </MasterContext.Provider>
+    </LastReceivedDataContext.Provider>
   )
 }
 
-export const useMasterContext = (): ContextProps => {
-  const context = useContext(MasterContext)
-
-  if (!context) {
-    throw new Error('useMasterContext must be used within a MasterProvider')
-  }
-
-  return context
-}
+export const useLastReceivedData = () => useContext(LastReceivedDataContext)

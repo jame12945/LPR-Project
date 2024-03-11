@@ -4,12 +4,12 @@ import HistoryPage from './pages/HistoryPage'
 import LprPage from './pages/LprPage'
 import ConfigLanePage from './pages/ConfigLanePage'
 import ListviewPage from './pages/ListVIewPage'
-import { MasterProvider } from './contexts/MasterContext'
+import { LastReceivedDataProvider } from './contexts/MasterContext'
 
 function App() {
   return (
     <>
-      <MasterProvider>
+      <LastReceivedDataProvider>
         <Navbar />
         <Routes>
           <Route path="/" element={<LprPage />} />
@@ -18,7 +18,7 @@ function App() {
           <Route path="/setting" element={<ConfigLanePage />} />
           <Route path="/list" element={<ListviewPage />} />
         </Routes>
-      </MasterProvider>
+      </LastReceivedDataProvider>
     </>
   )
 }

@@ -162,7 +162,7 @@ function HistoryComponent() {
             className="w-80 flex items-end mb-2.5"
           ></Search>
         </div>
-        <Table columns={cols} dataSource={dataSource} />
+        <Table columns={cols} dataSource={dataSource} pagination={false} />
         <ToastContainer />
         <Modal
           title={`Booking Details : ${selectedBooking?.bookingId}`}

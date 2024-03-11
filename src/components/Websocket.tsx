@@ -17,7 +17,9 @@ import axios from 'axios'
 import { ToastContainer, toast } from 'react-toastify'
 import Timer from './Timer'
 import { FaCar } from 'react-icons/fa6'
-
+import { useLastReceivedData } from '../contexts/MasterContext'
+import addNotification from 'react-push-notification'
+import { Howl } from 'howler'
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
 
 export interface BookingType {
@@ -103,6 +105,7 @@ type BOOKING_LIST_TYPE = {
 
 const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const socket = useContext(WebSocketContext)
+  const { lastReceivedData, updateLastReceivedData } = useLastReceivedData()
   const [data, setData] = useState<ReceiveData>()
   const [checkResultMeassage, setCheckResultMeassage] = useState<boolean>()
   const [bookingData, setBookingData] = useState<BOOKING_LIST_TYPE[]>([])
@@ -118,6 +121,21 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     api[type]({
       message: 'Open Gate Error',
       description: 'ระบบเปิดไม้กั้นเกิดขัอผิดพลาด',
+    })
+  }
+  const playNotification = async (message: string) => {
+    const sound = new Howl({
+      src: ['../../assets/audio/notify.mp3'],
+    })
+    sound.play()
+
+    addNotification({
+      title: 'Warning',
+      subtitle: 'This is a subtitle',
+      message: message,
+      theme: 'darkblue',
+      native: true,
+      silent: false,
     })
   }
 
@@ -149,7 +167,16 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             console.log(item.bookingId)
             console.log(item.licensePlate)
             setSelectedBookingIds([...selectBookingIds, item.bookingId])
+            if (item?.status === 'bookingNotFound') {
+              playNotification('ไม่พบ Booking ')
+            } else if (item?.status === 'early') {
+              playNotification('รถมาถึงเร็วกว่าเวลาที่กำหนด')
+            } else if (item?.status === 'late') {
+              playNotification('รถมาถึงช้ากว่าเวลาที่กำหนด')
+            }
           })
+        } else {
+          playNotification('พบเจอมากกว่า 1 Bookings')
         }
 
         const bookingData = data.map((el) => ({
@@ -170,6 +197,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
           lane: el.lane,
         }))
 
+        updateLastReceivedData(data[0])
         setBookingData(bookingData)
         setData(data[0])
         setInputData((prev) => ({
@@ -178,7 +206,15 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         }))
       }
     })
-  }, [lane, socket])
+    if (lastReceivedData !== undefined) {
+      const receivedDataForLane = lastReceivedData.find(
+        (el) => el.lane === lane
+      )
+      if (receivedDataForLane) {
+        setData(receivedDataForLane)
+      }
+    }
+  }, [lane, socket, updateLastReceivedData])
 
   useEffect(() => {
     const updatedBookingData = bookingData.map((el) => ({
@@ -368,7 +404,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             )}
           </div>
 
-          {bookingData.length > 0 ? (
+          {bookingData.length > 1 ? (
             <div className="bg-white rounded-md  flex items-center justify-center ">
               <div className="bg-white rounded-md  flex items-center justify-center">
                 {selectBookingIds.length === 0 ? (
@@ -465,15 +501,66 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
               </Modal>
             </div>
           ) : (
-            <div className="bg-white flex items-center justify-center ">
-              <div className=" rounded-md  h-8 pt-1 w-24">
-                <div className="flex justify-center">
-                  <span className="text-blue bg-white text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400">
-                    กำลังรอ
-                  </span>
+            <>
+              {bookingData.length === 1 ? (
+                <div className="bg-white rounded-md  flex items-center justify-center ">
+                  {bookingData.map((el, index) => (
+                    <Popover
+                      key={index}
+                      content={
+                        <div>
+                          <div className="grid grid-flow-col justify-stretch">
+                            <div>
+                              <p>Booking Date:</p>
+                              <p>Booking Start:</p>
+                              <p>Booking End:</p>
+                              <p>Plate Number:</p>
+                              <p>Warehouse Code:</p>
+                              <p>Truck Type:</p>
+                              <p> Company Code:</p>
+                              <p> Sup Code:</p>
+                              <p> Sup Name:</p>
+                              <p> Operation Type:</p>
+                              <p> Driver Name:</p>
+                              <p> Tel:</p>
+                            </div>
+
+                            <div className="pl-10">
+                              <div>
+                                {dayjs(el?.bookingDate).format('YYYY-MM-DD')}
+                              </div>
+                              <div>{el?.bookingStart}</div>
+                              <div>{el?.bookingEnd}</div>
+                              <div>{el?.licensePlate}</div>
+                              <div>{el?.warehouseCode}</div>
+                              <div>{el?.truckType}</div>
+                              <div>{el?.companyCode}</div>
+                              <div>{el?.supCode}</div>
+                              <div>{el?.supName}</div>
+                              <div>{el?.operationType}</div>
+                              <div>{el?.driverName}</div>
+                              <div>{el?.telNo}</div>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                    >
+                      {el.bookingId}
+                    </Popover>
+                  ))}
                 </div>
-              </div>
-            </div>
+              ) : (
+                <div className="bg-white flex items-center justify-center ">
+                  <div className=" rounded-md  h-8 pt-1 w-24">
+                    <div className="flex justify-center">
+                      <span className="text-blue bg-white text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400">
+                        กำลังรอ
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           <div className="bg-white rounded-md  flex items-center justify-center">
@@ -490,7 +577,17 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             )}
           </div>
           <div className="bg-white rounded-md  flex items-center justify-center">
-            {data?.arrivalTime ? formattedArrivalTime : ''}
+            {data?.arrivalTime ? (
+              formattedArrivalTime
+            ) : (
+              <div className=" rounded-md  h-8 pt-1 w-24">
+                <div className="flex justify-center">
+                  <span className="text-blue bg-white text-xs font-medium me-2 px-2.5 py-0.5 rounded border border-blue-400">
+                    กำลังรอ
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
           <div className="bg-white rounded-md  flex items-center justify-center">
             {data?.status == 'success' ? (
