@@ -11,6 +11,7 @@ import type { SearchProps } from 'antd/es/input/Search'
 import Timer from './Timer'
 
 type RECEIVE_DATA = {
+  arrivalTime: string
   full_image: string
   plate_image: string
   licensePlate: string
@@ -41,6 +42,7 @@ function HistoryComponent() {
     null
   )
   const [responseData, setResponseData] = useState<RECEIVE_DATA[] | null>(null)
+
   const { Search } = Input
 
   useEffect(() => {
@@ -52,9 +54,22 @@ function HistoryComponent() {
         )
         console.log(response)
         const data = response.data.data.filterDateBooking || []
+
         setResponseData(data)
         if (data.length > 0) {
-          setDataSource(data)
+          // setDataSource(data)
+          setDataSource(
+            data
+              .map((item: RECEIVE_DATA) => ({
+                ...item,
+
+                arrivalTime: dayjs(item.arrivalTime).format('DD/MM/YY HH:mm'),
+              }))
+              .sort(
+                (a: RECEIVE_DATA, b: RECEIVE_DATA) =>
+                  dayjs(b.arrivalTime).unix() - dayjs(a.arrivalTime).unix()
+              )
+          )
         }
       } catch (error) {
         console.error('fetchingData Error ', error)
@@ -81,6 +96,10 @@ function HistoryComponent() {
           <div className="mt-2">{text}</div>
         </div>
       ),
+    },
+    {
+      title: 'Arrival Date/Time',
+      dataIndex: 'arrivalTime',
     },
     {
       title: 'Appointment Date',
