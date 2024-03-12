@@ -106,12 +106,27 @@ type BOOKING_LIST_TYPE = {
   lane: string
 }
 
+type NOTIFICATION_TYPE = {
+  message: string
+  description: string
+  placement: NotificationPlacement
+}
+
+type NotificationPlacement =
+  | 'top'
+  | 'topLeft'
+  | 'topRight'
+  | 'bottom'
+  | 'bottomLeft'
+  | 'bottomRight'
+  | undefined
+
 const url = `${import.meta.env.VITE_API_GATEWAY_URL}`
 
 const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const socket = useContext(WebSocketContext)
   const { lastReceivedData, updateLastReceivedData } = useLastReceivedData()
-  const [data, setData] = useState<ReceiveData>()
+  const [data, setData] = useState<ReceiveData | undefined>()
   const [checkResultMeassage, setCheckResultMeassage] = useState<boolean>()
   const [bookingData, setBookingData] = useState<BOOKING_LIST_TYPE[]>([])
   const [selectBookingIds, setSelectedBookingIds] = useState<string[]>([])
@@ -124,6 +139,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     null
   )
   const [selectedCheckInBookingIds, setSelectedCheckInBookingIds] = useState([])
+  const [status, setStatus] = useState<string>('')
+  const [driver, setDriver] = useState<string>('')
   const [inputdata, setInputData] = useState({
     license_plate_number: '',
     lane: '',
@@ -192,6 +209,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         if (data.length === 1) {
           data.forEach((item) => {
             setSelectedBookingIds([...selectBookingIds, item.bookingId])
+            setStatus(item.status)
             if (item?.status === 'bookingNotFound') {
               playNotification('ไม่พบ Booking ')
             } else if (item?.status === 'early') {
@@ -252,6 +270,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   useEffect(() => {
     if (bookingData.length > 1) {
       setSelectedCheckInBookingIds([])
+      setStatus('')
+      setDriver('')
     }
   }, [bookingData])
 
@@ -299,6 +319,25 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     },
   ]
 
+  const alertNotification = (
+    placement: NotificationPlacement,
+    statusMessage: string
+  ) => {
+    const notificationConfig: NOTIFICATION_TYPE = {
+      message: '',
+      description: statusMessage,
+      placement,
+    }
+
+    if (statusMessage === 'เช็คอินสำเร็จ') {
+      notificationConfig.message = 'Check In Successfully'
+    } else {
+      notificationConfig.message = 'Check In Error'
+    }
+
+    api.info(notificationConfig)
+  }
+
   const handleCheckIn = async (bookingId: string, licensePlate: string) => {
     console.log('check in')
 
@@ -308,11 +347,15 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         licensePlate: licensePlate,
       })
       console.log(`Checking in successfully for booking of ${bookingId}`)
-      console.log('Response:', response.data.data.bookingId)
+      console.log('Response:', response.data.data.driverName)
+      console.log(response.data.data)
       setSelectedCheckInBookingIds((prevIds) => [
         ...prevIds,
         response.data.data.bookingId,
       ])
+      setStatus(response.data.data.status)
+      setDriver((prevDriver) => [...prevDriver, response.data.data.driverName])
+
       {
         bookingData.map((el, index) => (
           <div
@@ -330,14 +373,14 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         ))
       }
 
-      // const succesStatus = response.data.statusMessage.toString()
+      const succesStatus = response.data.statusMessage.toString()
 
-      // alertNotification('top', succesStatus)
+      alertNotification('top', succesStatus)
     } catch (error) {
-      // const errorStatus = (
-      //   error as ErrorResponse
-      // ).response.data.statusMessage.toString()
-      // alertNotification('top', errorStatus)
+      const errorStatus = (
+        error as ErrorResponse
+      ).response.data.statusMessage.toString()
+      alertNotification('top', errorStatus)
       console.log(error)
     }
   }
@@ -403,6 +446,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         setBookingData([])
         setSelectedBookingIds([])
         setData(undefined)
+        setStatus('')
+        setDriver('')
       } else if (action === 'RejectOpengate') {
         for (const bookingId of selectBookingIds) {
           const selectedBooking = bookingData.find(
@@ -590,11 +635,26 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                     </Button>
                   </>
                 ) : (
-                  <span>{selectedCheckInBookingIds.join(', ')}</span>
+                  <>
+                    <div className=" flex flex-col  justify-center items-center">
+                      <Button
+                        onClick={handleBookingsButtonClick}
+                        className=" w-max justify-center items-center  "
+                      >
+                        Bookings
+                      </Button>
+                      <span
+                        className="justify-center items-center ml-5"
+                        style={{ maxHeight: '70px', overflowY: 'auto' }}
+                      >
+                        {selectedCheckInBookingIds.join(', ')}
+                      </span>
+                    </div>
+                  </>
                 )}
               </div>
               <Modal
-                title="Select Bookings"
+                title={`Select Bookings in lane: ${lane_name}`}
                 open={visible}
                 onOk={handleOk}
                 onCancel={handleCancel}
@@ -716,8 +776,16 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
           )}
 
           <div className="bg-white rounded-md  flex items-center justify-center">
-            {data?.driverName ? (
+            {data?.driverName && bookingData.length === 1 ? (
               data?.driverName
+            ) : driver.length !== 0 ? (
+              <div className="flex flex-col justify-center items-center">
+                {driver.map((name, index) => (
+                  <span key={index} className="whitespace-nowrap ">
+                    {name}
+                  </span>
+                ))}
+              </div>
             ) : (
               <div className="  rounded-md  h-8 pt-1 w-24">
                 <div className="flex justify-center">
@@ -742,13 +810,13 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             )}
           </div>
           <div className="bg-white rounded-md  flex items-center justify-center">
-            {data?.status == 'success' ? (
+            {status == 'success' ? (
               <div className=" text-green">สำเร็จ</div>
-            ) : data?.status == 'early' ? (
+            ) : status == 'early' ? (
               <div className="text-orange">มาก่อนเวลาจอง</div>
-            ) : data?.status == 'late' ? (
+            ) : status == 'late' ? (
               <div className="text-orange">มาหลังเวลาจอง</div>
-            ) : data?.status == 'bookingNotFound' ? (
+            ) : status == 'bookingNotFound' ? (
               <div className="text-red">ไม่พบการจอง</div>
             ) : (
               <div className=" rounded-md  h-8 pt-1 w-24">
@@ -761,7 +829,10 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             )}
           </div>
           <div className="bg-white rounded-md  flex items-center justify-center">
-            {data?.isCheckIn ? (
+            {data?.isCheckIn ||
+            status === 'success' ||
+            status === 'late' ||
+            status === 'early' ? (
               <div>CheckIn สำเร็จ</div>
             ) : data?.isReject ? (
               <div>ยกเลิกรายการ</div>
@@ -797,7 +868,9 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                   <Menu.Item key="Reset">Reset</Menu.Item>
                   <Menu.Item
                     key="RejectOpengate"
-                    disabled={bookingData.length > 1}
+                    disabled={
+                      bookingData.length > 1 || bookingData.length === 0
+                    }
                   >
                     Reject With Opengate
                   </Menu.Item>

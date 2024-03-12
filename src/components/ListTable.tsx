@@ -89,20 +89,19 @@ function ListComponent() {
     null
   )
 
-  useEffect(() => {
-    const getList = async () => {
-      try {
-        const response = await axios.get(
-          `${url}bookings/list-view/${searchValue}`
-        )
-        console.log(response.data.data.filterDateBooking)
-        const listData = response.data.data.filterDateBooking
-        setList(listData)
-      } catch (error) {
-        console.log(error)
-        return error
-      }
+  const getList = async () => {
+    try {
+      const response = await axios.get(
+        `${url}bookings/list-view/${searchValue}`
+      )
+      const listData = response.data.data.filterDateBooking
+      setList(listData)
+    } catch (error) {
+      console.log(error)
+      return error
     }
+  }
+  useEffect(() => {
     getList()
   }, [searchValue])
 
@@ -237,7 +236,9 @@ function ListComponent() {
           <Input.Search
             placeholder="Input Car Registration"
             enterButton
-            onSearch={(value) => setSearchValue(value)}
+            onSearch={(value) => {
+              setSearchValue(value), getList()
+            }}
             className="w-80 flex items-end mb-2.5"
           ></Input.Search>
         </div>
