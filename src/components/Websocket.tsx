@@ -20,7 +20,6 @@ import { useLastReceivedData } from '../contexts/MasterContext'
 import addNotification from 'react-push-notification'
 import { Howl } from 'howler'
 import Table, { ColumnsType } from 'antd/es/table'
-import { ListData } from '../type/booking'
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
 
 export interface BookingType {
@@ -119,6 +118,14 @@ type NotificationPlacement =
   | 'bottomRight'
   | undefined
 
+interface ErrorResponse {
+  response: {
+    data: {
+      statusMessage: string
+    }
+  }
+}
+
 const url = `${import.meta.env.VITE_API_GATEWAY_URL}`
 
 const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
@@ -136,9 +143,11 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const [selectedBooking, setSelectedBooking] = useState<ReceiveData | null>(
     null
   )
-  const [selectedCheckInBookingIds, setSelectedCheckInBookingIds] = useState([])
+  const [selectedCheckInBookingIds, setSelectedCheckInBookingIds] = useState<
+    string[]
+  >([])
   const [status, setStatus] = useState<string>('')
-  const [driver, setDriver] = useState<string>('')
+  const [driver, setDriver] = useState<string[]>([])
   const [selectedAction, setSelectedAction] = useState<boolean>(false)
   const [rejResult, setRejResult] = useState<boolean>(false)
   const [inputdata, setInputData] = useState({
@@ -176,6 +185,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         )
         const listData = response.data.data.filterDateBooking
         setList(listData)
+        setLicensePlate('')
       } catch (error) {
         console.log(error)
         return error
@@ -271,7 +281,9 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     if (bookingData.length > 1) {
       setSelectedCheckInBookingIds([])
       setStatus('')
-      setDriver('')
+      setDriver([])
+      setList([])
+      setRejResult(false)
     }
   }, [bookingData])
 
@@ -279,10 +291,12 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     if (bookingData.length === 1) {
       setSelectedAction(false)
       setRejResult(false)
+      setSelectedCheckInBookingIds([])
+      setDriver([])
     }
   }, [bookingData])
 
-  const handleBooking = (event: ListData) => {
+  const handleBooking = (event: ReceiveData) => {
     setSelectedBooking(event)
     setModalVisible(true)
   }
@@ -291,17 +305,18 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     setModalVisible(false)
   }
 
-  const listCol: ColumnsType<BOOKING_LIST_TYPE> = [
+  const listCol: ColumnsType<ReceiveData> = [
     {
       title: 'No.',
       dataIndex: 'no',
-      render: (text: string, event: ListData, index: number) => `${index + 1}`,
+      render: (text: string, event: ReceiveData, index: number) =>
+        `${index + 1}`,
     },
 
     {
       title: 'Booking Id',
       dataIndex: 'bookingId',
-      render: (bookingId: string, event: ListData) => (
+      render: (bookingId: string, event: ReceiveData) => (
         <>
           <div
             className="bg-sky rounded-md px-2 py-1.5 text-center hover:bg-rain hover:text-white cursor-pointer"
@@ -315,7 +330,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     {
       title: 'Manage',
       dataIndex: 'manage',
-      render: (_, event: ListData) => (
+      render: (_, event: ReceiveData) => (
         <Button
           disabled={selectedCheckInBookingIds.includes(event.bookingId)}
           onClick={() => handleCheckIn(event.bookingId, event.licensePlate)}
@@ -453,9 +468,10 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
       } else if (action === 'Reset') {
         setBookingData([])
         setSelectedBookingIds([])
+        setSelectedCheckInBookingIds([])
         setData(undefined)
         setStatus('')
-        setDriver('')
+        setDriver([])
         setSelectedAction(false)
         setRejResult(false)
       } else if (action === 'RejectOpengate') {
@@ -843,7 +859,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
           <div className="bg-white rounded-md  flex items-center justify-center">
             {(data?.isCheckIn && status === 'early') ||
             (data?.isCheckIn && status === 'success') ||
-            (data?.isCheckIn && status === 'late') ? (
+            (data?.isCheckIn && status === 'late') ||
+            selectedCheckInBookingIds.length != 0 ? (
               <div>CheckIn สำเร็จ</div>
             ) : data?.isReject || rejResult ? (
               <div>ยกเลิกรายการ</div>
@@ -861,7 +878,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                       !selectBookingIds.length ||
                       !bookingData.some((el) => el.bookingId) ||
                       data?.isCheckIn ||
-                      selectedAction === true
+                      selectedAction === true ||
+                      bookingData.length > 1
                     }
                   >
                     CheckIn And OpenGate
@@ -884,7 +902,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                     disabled={
                       bookingData.length > 1 ||
                       bookingData.length === 0 ||
-                      selectedAction === true
+                      selectedAction === true ||
+                      status === 'bookingNotFound'
                     }
                   >
                     Reject With Opengate
