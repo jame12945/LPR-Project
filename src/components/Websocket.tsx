@@ -9,7 +9,6 @@ import {
   Image,
   notification,
   Popover,
-  Radio,
 } from 'antd'
 import dayjs from 'dayjs'
 import { IoChevronDownOutline } from 'react-icons/io5'
@@ -22,7 +21,6 @@ import addNotification from 'react-push-notification'
 import { Howl } from 'howler'
 import Table, { ColumnsType } from 'antd/es/table'
 import { ListData } from '../type/booking'
-import { GiTruck } from 'react-icons/gi'
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
 
 export interface BookingType {
@@ -141,6 +139,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const [selectedCheckInBookingIds, setSelectedCheckInBookingIds] = useState([])
   const [status, setStatus] = useState<string>('')
   const [driver, setDriver] = useState<string>('')
+  const [selectedAction, setSelectedAction] = useState<boolean>(false)
+  const [rejResult, setRejResult] = useState<boolean>(false)
   const [inputdata, setInputData] = useState({
     license_plate_number: '',
     lane: '',
@@ -272,6 +272,13 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
       setSelectedCheckInBookingIds([])
       setStatus('')
       setDriver('')
+    }
+  }, [bookingData])
+
+  useEffect(() => {
+    if (bookingData.length === 1) {
+      setSelectedAction(false)
+      setRejResult(false)
     }
   }, [bookingData])
 
@@ -414,6 +421,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             )
             console.log('Response:', response.data.data)
             setData({ ...data, ...response.data.data })
+            setSelectedAction(true)
           }
         }
       } else if (action === 'Reject') {
@@ -448,6 +456,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         setData(undefined)
         setStatus('')
         setDriver('')
+        setSelectedAction(false)
+        setRejResult(false)
       } else if (action === 'RejectOpengate') {
         for (const bookingId of selectBookingIds) {
           const selectedBooking = bookingData.find(
@@ -468,8 +478,9 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             console.log(
               `Reject successful for booking ${selectedBooking.bookingId}`
             )
-            console.log('Response:', response.data)
-            setData({ ...data, ...response.data.data })
+            console.log('Response:', response.data.data.isReject)
+
+            setRejResult(response.data.data.isReject)
 
             const responseOpenGate = await axios.post(
               `${import.meta.env.VITE_API_GATEWAY_URL}open-gate`,
@@ -478,6 +489,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
               }
             )
             console.log('Response Opengate  Data', responseOpenGate.data)
+            setSelectedAction(true)
           }
         }
       } else {
@@ -829,12 +841,11 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             )}
           </div>
           <div className="bg-white rounded-md  flex items-center justify-center">
-            {data?.isCheckIn ||
-            status === 'success' ||
-            status === 'late' ||
-            status === 'early' ? (
+            {(data?.isCheckIn && status === 'early') ||
+            (data?.isCheckIn && status === 'success') ||
+            (data?.isCheckIn && status === 'late') ? (
               <div>CheckIn สำเร็จ</div>
-            ) : data?.isReject ? (
+            ) : data?.isReject || rejResult ? (
               <div>ยกเลิกรายการ</div>
             ) : (
               <div></div>
@@ -849,7 +860,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                     disabled={
                       !selectBookingIds.length ||
                       !bookingData.some((el) => el.bookingId) ||
-                      data?.isCheckIn
+                      data?.isCheckIn ||
+                      selectedAction === true
                     }
                   >
                     CheckIn And OpenGate
@@ -860,7 +872,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                     disabled={
                       !selectBookingIds.length ||
                       !bookingData.some((el) => el.lane && el.licensePlate) ||
-                      data?.isCheckIn
+                      data?.isCheckIn ||
+                      selectedAction === true
                     }
                   >
                     Reject
@@ -869,7 +882,9 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                   <Menu.Item
                     key="RejectOpengate"
                     disabled={
-                      bookingData.length > 1 || bookingData.length === 0
+                      bookingData.length > 1 ||
+                      bookingData.length === 0 ||
+                      selectedAction === true
                     }
                   >
                     Reject With Opengate
