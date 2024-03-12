@@ -20,6 +20,9 @@ import { FaCar } from 'react-icons/fa6'
 import { useLastReceivedData } from '../contexts/MasterContext'
 import addNotification from 'react-push-notification'
 import { Howl } from 'howler'
+import Table, { ColumnsType } from 'antd/es/table'
+import { ListData } from '../type/booking'
+import { GiTruck } from 'react-icons/gi'
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
 
 export interface BookingType {
@@ -103,6 +106,8 @@ type BOOKING_LIST_TYPE = {
   lane: string
 }
 
+const url = `${import.meta.env.VITE_API_GATEWAY_URL}`
+
 const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const socket = useContext(WebSocketContext)
   const { lastReceivedData, updateLastReceivedData } = useLastReceivedData()
@@ -112,6 +117,13 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const [selectBookingIds, setSelectedBookingIds] = useState<string[]>([])
   const [api, contextHolder] = notification.useNotification()
   const [visible, setVisible] = useState(false)
+  const [modalVisible, setModalVisible] = useState<boolean>(false)
+  const [list, setList] = useState([])
+  const [licensePlate, setLicensePlate] = useState<string>('')
+  const [selectedBooking, setSelectedBooking] = useState<ReceiveData | null>(
+    null
+  )
+  const [selectedCheckInBookingIds, setSelectedCheckInBookingIds] = useState([])
   const [inputdata, setInputData] = useState({
     license_plate_number: '',
     lane: '',
@@ -140,6 +152,22 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   }
 
   useEffect(() => {
+    const getList = async () => {
+      try {
+        const response = await axios.get(
+          `${url}bookings/list-view/${licensePlate}`
+        )
+        const listData = response.data.data.filterDateBooking
+        setList(listData)
+      } catch (error) {
+        console.log(error)
+        return error
+      }
+    }
+    getList()
+  }, [licensePlate])
+
+  useEffect(() => {
     socket.on('connect', () => {
       console.log('Connected')
     })
@@ -155,13 +183,13 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         data.forEach((item) => {
           console.log('data resultmessage', item.resultMessage)
           setCheckResultMeassage(item.resultMessage)
+          setLicensePlate(item.licensePlate)
           if (item.isOpenGateError === true) {
             console.log('data isOpenGateError', item.isOpenGateError)
             openNotificationWithIcon('error')
           }
         })
         if (data.length === 1) {
-          // const singleData = data.find((el) => el.lane === lane)
           data.forEach((item) => {
             setSelectedBookingIds([...selectBookingIds, item.bookingId])
             if (item?.status === 'bookingNotFound') {
@@ -220,6 +248,99 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     }))
     setBookingData(updatedBookingData)
   }, [selectBookingIds])
+
+  useEffect(() => {
+    if (bookingData.length > 1) {
+      setSelectedCheckInBookingIds([])
+    }
+  }, [bookingData])
+
+  const handleBooking = (event: ListData) => {
+    setSelectedBooking(event)
+    setModalVisible(true)
+  }
+
+  const handleModalCancel = () => {
+    setModalVisible(false)
+  }
+
+  const listCol: ColumnsType<BOOKING_LIST_TYPE> = [
+    {
+      title: 'No.',
+      dataIndex: 'no',
+      render: (text: string, event: ListData, index: number) => `${index + 1}`,
+    },
+
+    {
+      title: 'Booking Id',
+      dataIndex: 'bookingId',
+      render: (bookingId: string, event: ListData) => (
+        <>
+          <div
+            className="bg-sky rounded-md px-2 py-1.5 text-center hover:bg-rain hover:text-white cursor-pointer"
+            onClick={() => handleBooking(event)}
+          >
+            {bookingId}
+          </div>
+        </>
+      ),
+    },
+    {
+      title: 'Manage',
+      dataIndex: 'manage',
+      render: (_, event: ListData) => (
+        <Button
+          disabled={selectedCheckInBookingIds.includes(event.bookingId)}
+          onClick={() => handleCheckIn(event.bookingId, event.licensePlate)}
+        >
+          Check In
+        </Button>
+      ),
+    },
+  ]
+
+  const handleCheckIn = async (bookingId: string, licensePlate: string) => {
+    console.log('check in')
+
+    try {
+      const response = await axios.post(`${url}bookings/check-in`, {
+        bookingId: bookingId,
+        licensePlate: licensePlate,
+      })
+      console.log(`Checking in successfully for booking of ${bookingId}`)
+      console.log('Response:', response.data.data.bookingId)
+      setSelectedCheckInBookingIds((prevIds) => [
+        ...prevIds,
+        response.data.data.bookingId,
+      ])
+      {
+        bookingData.map((el, index) => (
+          <div
+            key={index}
+            onClick={() => {
+              if (!selectBookingIds.includes(el.bookingId)) {
+                setSelectedBookingIds([...selectBookingIds, el.bookingId])
+              } else {
+                setSelectedBookingIds(
+                  selectBookingIds.filter((id) => id !== el.bookingId)
+                )
+              }
+            }}
+          ></div>
+        ))
+      }
+
+      // const succesStatus = response.data.statusMessage.toString()
+
+      // alertNotification('top', succesStatus)
+    } catch (error) {
+      // const errorStatus = (
+      //   error as ErrorResponse
+      // ).response.data.statusMessage.toString()
+      // alertNotification('top', errorStatus)
+      console.log(error)
+    }
+  }
 
   const handleMenuClick = async ({ key }: { key: React.Key }) => {
     const action = key as string
@@ -360,6 +481,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   }
 
   const handleBookingsButtonClick = () => {
+    console.log('select booking id -->', selectBookingIds)
     setVisible(true)
   }
 
@@ -370,6 +492,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   const handleOk = () => {
     setVisible(false)
   }
+
   return (
     <>
       {contextHolder}
@@ -441,7 +564,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
           {bookingData.length > 1 ? (
             <div className="bg-white rounded-md  flex items-center justify-center ">
               <div className="bg-white rounded-md  flex items-center justify-center">
-                {selectBookingIds.length === 0 ? (
+                {selectedCheckInBookingIds.length === 0 ? (
                   <>
                     {bookingData.map((el, index) => (
                       <div
@@ -467,7 +590,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                     </Button>
                   </>
                 ) : (
-                  <span>{selectBookingIds.join(', ')}</span>
+                  <span>{selectedCheckInBookingIds.join(', ')}</span>
                 )}
               </div>
               <Modal
@@ -475,63 +598,58 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                 open={visible}
                 onOk={handleOk}
                 onCancel={handleCancel}
+                footer={false}
               >
-                <Radio.Group value={selectBookingIds[0]}>
-                  {bookingData.map((el, index) => (
-                    <Radio
-                      key={index}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setSelectedBookingIds([el.bookingId])
-                        }
-                      }}
-                      value={el.bookingId}
-                    >
-                      <Popover
-                        key={index}
-                        content={
-                          <div>
-                            <div className="grid grid-flow-col justify-stretch">
-                              <div>
-                                <p>Booking Date:</p>
-                                <p>Booking Start:</p>
-                                <p>Booking End:</p>
-                                <p>Plate Number:</p>
-                                <p>Warehouse Code:</p>
-                                <p>Truck Type:</p>
-                                <p> Company Code:</p>
-                                <p> Sup Code:</p>
-                                <p> Sup Name:</p>
-                                <p> Operation Type:</p>
-                                <p> Driver Name:</p>
-                                <p> Tel:</p>
-                              </div>
+                <>
+                  <Table
+                    columns={listCol}
+                    dataSource={list}
+                    pagination={false}
+                  />
+                  <Modal
+                    title={`Booking Details : ${selectedBooking?.bookingId}`}
+                    open={modalVisible}
+                    onCancel={handleModalCancel}
+                    footer={null}
+                  >
+                    <div className="grid grid-flow-col justify-stretch">
+                      <div>
+                        <p>Booking Date:</p>
+                        <p>Booking Start:</p>
+                        <p>Booking End:</p>
+                        <p>Plate Number:</p>
+                        <p>Warehouse Code:</p>
+                        <p>Truck Type:</p>
+                        <p> Company Code:</p>
+                        <p> Sup Code:</p>
+                        <p> Sup Name:</p>
+                        <p> Operation Type:</p>
+                        <p> Driver Name:</p>
+                        <p> Tel:</p>
+                      </div>
 
-                              <div className="pl-10">
-                                <div>
-                                  {dayjs(el?.bookingDate).format('YYYY-MM-DD')}
-                                </div>
-                                <div>{el?.bookingStart}</div>
-                                <div>{el?.bookingEnd}</div>
-                                <div>{el?.licensePlate}</div>
-                                <div>{el?.warehouseCode}</div>
-                                <div>{el?.truckType}</div>
-                                <div>{el?.companyCode}</div>
-                                <div>{el?.supCode}</div>
-                                <div>{el?.supName}</div>
-                                <div>{el?.operationType}</div>
-                                <div>{el?.driverName}</div>
-                                <div>{el?.telNo}</div>
-                              </div>
-                            </div>
-                          </div>
-                        }
-                      >
-                        {el.bookingId}
-                      </Popover>
-                    </Radio>
-                  ))}
-                </Radio.Group>
+                      <div className="pl-10">
+                        <div>
+                          {dayjs(selectedBooking?.bookingDate).format(
+                            'YYYY-MM-DD'
+                          )}
+                        </div>
+                        <div>{selectedBooking?.bookingStart}</div>
+                        <div>{selectedBooking?.bookingEnd}</div>
+                        <div>{selectedBooking?.licensePlate}</div>
+                        <div>{selectedBooking?.warehouseCode}</div>
+                        <div>{selectedBooking?.truckType}</div>
+                        <div>{selectedBooking?.companyCode}</div>
+                        <div>{selectedBooking?.supCode}</div>
+                        <div>{selectedBooking?.supName}</div>
+                        <div>{selectedBooking?.operationType}</div>
+                        <div>{selectedBooking?.driverName}</div>
+                        <div>{selectedBooking?.telNo}</div>
+                      </div>
+                    </div>
+                  </Modal>
+                  {/* Radio Group Space */}
+                </>
               </Modal>
             </div>
           ) : (
@@ -677,7 +795,10 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
                     Reject
                   </Menu.Item>
                   <Menu.Item key="Reset">Reset</Menu.Item>
-                  <Menu.Item key="RejectOpengate">
+                  <Menu.Item
+                    key="RejectOpengate"
+                    disabled={bookingData.length > 1}
+                  >
                     Reject With Opengate
                   </Menu.Item>
                 </Menu>
