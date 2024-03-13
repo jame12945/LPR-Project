@@ -297,11 +297,11 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
       )
     } else if (notiStatus === 'early') {
       playNotification(
-        `รถมาถึงเร็วกว่าเวลาที่กำหนด ที่เลน:  ${lane_name}  เลขทะเบียน: ${licensePlate}`
+        `รถมาถึงก่อนเวลาจองที่กำหนด ที่เลน:  ${lane_name}  เลขทะเบียน: ${licensePlate}`
       )
     } else if (notiStatus === 'late') {
       playNotification(
-        `รถมาถึงล่าช้ากว่าเวลาที่กำหนด ที่เลน:  ${lane_name}  เลขทะเบียน: ${licensePlate}`
+        `รถมาถึงหลังเวลาจองที่กำหนด ที่เลน:  ${lane_name}  เลขทะเบียน: ${licensePlate}`
       )
     } else if (multiBooking === true) {
       playNotification(
