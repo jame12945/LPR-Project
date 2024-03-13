@@ -20,6 +20,7 @@ import { useLastReceivedData } from '../contexts/MasterContext'
 import addNotification from 'react-push-notification'
 import { Howl } from 'howler'
 import Table, { ColumnsType } from 'antd/es/table'
+import { appWindow } from '@tauri-apps/api/window'
 type NotificationType = 'success' | 'info' | 'warning' | 'error'
 
 export interface BookingType {
@@ -147,9 +148,12 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     string[]
   >([])
   const [status, setStatus] = useState<string>('')
+  const [notiStatus, setNotiStatus] = useState<string>('')
   const [driver, setDriver] = useState<string[]>([])
   const [selectedAction, setSelectedAction] = useState<boolean>(false)
   const [rejResult, setRejResult] = useState<boolean>(false)
+  const [isNotificationDisplayed, setIsNotificationDisplayed] = useState(false)
+  const [multiBooking, setMultiBooking] = useState(false)
   const [inputdata, setInputData] = useState({
     license_plate_number: '',
     lane: '',
@@ -162,19 +166,29 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     })
   }
   const playNotification = async (message: string) => {
-    const sound = new Howl({
-      src: ['../../assets/audio/notify.mp3'],
-    })
-    sound.play()
+    if (!isNotificationDisplayed) {
+      setIsNotificationDisplayed(true)
 
-    addNotification({
-      title: 'Warning',
-      subtitle: 'This is a subtitle',
-      message: message,
-      theme: 'darkblue',
-      native: true,
-      silent: false,
-    })
+      const sound = new Howl({
+        src: ['../../assets/audio/notify.mp3'],
+      })
+      sound.play()
+
+      addNotification({
+        title: 'Warning',
+        subtitle: 'This is a subtitle',
+        message: message,
+        theme: 'darkblue',
+        native: true,
+        silent: false,
+      })
+      appWindow.unminimize()
+      appWindow.setFocus()
+
+      setTimeout(() => {
+        setIsNotificationDisplayed(false)
+      }, 1000)
+    }
   }
 
   useEffect(() => {
@@ -221,15 +235,15 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             setSelectedBookingIds([...selectBookingIds, item.bookingId])
             setStatus(item.status)
             if (item?.status === 'bookingNotFound') {
-              playNotification('ไม่พบ Booking ')
+              setNotiStatus(item?.status)
             } else if (item?.status === 'early') {
-              playNotification('รถมาถึงเร็วกว่าเวลาที่กำหนด')
+              setNotiStatus(item?.status)
             } else if (item?.status === 'late') {
-              playNotification('รถมาถึงช้ากว่าเวลาที่กำหนด')
+              setNotiStatus(item?.status)
             }
           })
         } else {
-          playNotification('พบเจอมากกว่า 1 Bookings')
+          setMultiBooking(true)
         }
 
         const bookingData = data.map((el) => ({
@@ -276,6 +290,23 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
     }))
     setBookingData(updatedBookingData)
   }, [selectBookingIds])
+  useEffect(() => {
+    if (notiStatus === 'bookingNotFound') {
+      playNotification('ไม่พบ Booking ')
+    } else if (notiStatus === 'early') {
+      playNotification(
+        `รถมาถึงเร็วกว่าเวลาที่กำหนด ที่เลน:  ${lane_name}  เลขทะเบียน: ${licensePlate}`
+      )
+    } else if (notiStatus === 'late') {
+      playNotification(
+        `รถมาถึงล่าช้ากว่าเวลาที่กำหนด ที่เลน:  ${lane_name}  เลขทะเบียน: ${licensePlate}`
+      )
+    } else if (multiBooking === true) {
+      playNotification(
+        `พบเจอมากกว่า 1 Bookings ที่เลน:  ${lane_name}  เลขทะเบียน: ${licensePlate} `
+      )
+    }
+  }, [notiStatus, multiBooking])
 
   useEffect(() => {
     if (bookingData.length > 1) {
@@ -284,6 +315,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
       setDriver([])
       setList([])
       setRejResult(false)
+      setMultiBooking(false)
     }
   }, [bookingData])
 
@@ -293,6 +325,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
       setRejResult(false)
       setSelectedCheckInBookingIds([])
       setDriver([])
+      setMultiBooking(false)
+      setNotiStatus('')
     }
   }, [bookingData])
 
@@ -474,6 +508,8 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
         setDriver([])
         setSelectedAction(false)
         setRejResult(false)
+        setNotiStatus('')
+        setMultiBooking(false)
       } else if (action === 'RejectOpengate') {
         for (const bookingId of selectBookingIds) {
           const selectedBooking = bookingData.find(

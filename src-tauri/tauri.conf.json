@@ -18,6 +18,9 @@
       "notification": {
         "all": true
       },
+      "window": {
+        "all": true
+      },
       "dialog": {
         "open": true,
         "message": true
