@@ -292,7 +292,9 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
   }, [selectBookingIds])
   useEffect(() => {
     if (notiStatus === 'bookingNotFound') {
-      playNotification('ไม่พบ Booking ')
+      playNotification(
+        `ไม่พบ Booking ที่เลน:  ${lane_name}  เลขทะเบียน: ${licensePlate}`
+      )
     } else if (notiStatus === 'early') {
       playNotification(
         `รถมาถึงเร็วกว่าเวลาที่กำหนด ที่เลน:  ${lane_name}  เลขทะเบียน: ${licensePlate}`
