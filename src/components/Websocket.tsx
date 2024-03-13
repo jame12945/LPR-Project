@@ -807,7 +807,7 @@ const LaneComponent = ({ lane, lane_name }: LANE_COMPONENT_TYPE) => {
             {data?.driverName && bookingData.length === 1 ? (
               data?.driverName
             ) : driver.length !== 0 ? (
-              <div className="flex flex-col justify-center items-center">
+              <div className="flex flex-col justify-center items-center overflow-y-auto max-h-24">
                 {driver.map((name, index) => (
                   <span key={index} className="whitespace-nowrap ">
                     {name}

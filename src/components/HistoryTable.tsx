@@ -57,19 +57,14 @@ function HistoryComponent() {
 
         setResponseData(data)
         if (data.length > 0) {
-          // setDataSource(data)
-          setDataSource(
-            data
-              .map((item: RECEIVE_DATA) => ({
-                ...item,
+          const formattedData = data.map((item: RECEIVE_DATA) => ({
+            ...item,
+            arrivalTime: dayjs(item.arrivalTime).format('DD/MM/YY HH:mm'),
+          }))
 
-                arrivalTime: dayjs(item.arrivalTime).format('DD/MM/YY HH:mm'),
-              }))
-              .sort(
-                (a: RECEIVE_DATA, b: RECEIVE_DATA) =>
-                  dayjs(b.arrivalTime).unix() - dayjs(a.arrivalTime).unix()
-              )
-          )
+          formattedData.sort((a: RECEIVE_DATA, b: RECEIVE_DATA) => b.id - a.id)
+
+          setDataSource(formattedData)
         }
       } catch (error) {
         console.error('fetchingData Error ', error)
